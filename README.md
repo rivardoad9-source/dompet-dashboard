@@ -63,6 +63,14 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 - Arah uang disimpulkan dari kolom tipe, tanda plus/minus, atau nama kategori
 - Kolom ditebak otomatis, **ditampilkan untuk dikoreksi**, lengkap dengan pratinjau sebelum apa pun tersimpan
 
+**Impor rekening koran PDF** — tanpa dependency PDF apa pun
+- Teks diambil langsung dari PDF memakai `DecompressionStream` bawaan browser, termasuk font ter-*subset* lewat tabel `/ToUnicode`
+- Tabel dikenali dari posisi teks: tanggal, keterangan, dan kolom nominal dipisah berdasarkan koordinat, bukan spasi
+- **Kolom saldo berjalan dideteksi dan sengaja tidak dipetakan** — mengimpor saldo sebagai nominal adalah cara tercepat merusak catatan
+- Gaya `250.000,00 DB` / `CR` terbaca sebagai arah uang; tanggal tanpa tahun dilengkapi dari periode dokumen
+- Hasilnya masuk ke wizard koreksi yang sama dengan CSV — tetap ditampilkan sebelum disimpan
+- PDF hasil scan dan PDF terkunci password ditolak dengan pesan yang menjelaskan langkah berikutnya, bukan error mentah
+
 **Lain-lain**
 - PWA: manifest, service worker offline, ikon maskable, shortcut aplikasi
 - Aksesibel: target sentuh ≥44px, fokus keyboard terlihat, `aria-label` pada semua kontrol ikon, status tidak pernah hanya bergantung pada warna
@@ -158,7 +166,8 @@ src/
         ├── zip.ts            Penulis ZIP minimal (dasar .xlsx)
         ├── xlsx.ts           Pembuat file Excel asli
         ├── recap.ts          Kartu rekap PNG di canvas
-        └── csv-import.ts     Parser impor dari aplikasi lain
+        ├── csv-import.ts     Parser impor dari aplikasi lain
+        └── pdf-import.ts     Pembaca rekening koran PDF
 ```
 
 Aturan yang dipegang di seluruh kode: **komponen tidak pernah menulis warna mentah.** Semuanya membaca CSS custom property, sehingga mengganti brand cukup di satu blok.

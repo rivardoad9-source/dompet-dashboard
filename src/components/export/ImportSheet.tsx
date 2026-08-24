@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, FileUp, Table2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, FileUp, Table2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { getCategory } from "@/lib/categories";
@@ -13,6 +13,7 @@ import {
   type ColumnMapping,
   type ParsedSheet,
 } from "@/lib/formats/csv-import";
+import { parsePdfStatement } from "@/lib/formats/pdf-import";
 import { actions, readState } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
 import { Field, Select } from "@/components/ui/Field";
@@ -30,8 +31,20 @@ type Mode = "append" | "replace";
  * berkas, tebak kolomnya, lalu **tunjukkan tebakan itu beserta pratinjau baris
  * yang akan masuk** supaya pengguna bisa mengoreksi sebelum apa pun disimpan.
  *
+ * Rekening koran PDF masuk lewat jalur yang sama: `parsePdfStatement` mengubah
+ * tabelnya menjadi `ParsedSheet`, lalu diperlakukan persis seperti CSV — tebak
+ * kolom, tampilkan, biarkan pengguna membetulkan.
+ *
  * Berkas .json Dompet tetap ditangani jalur lama (pemulihan penuh).
  */
+
+/** Hal-hal khusus PDF yang perlu diberitahukan sebelum pengguna menekan Impor. */
+interface PdfNotice {
+  hasBalance: boolean;
+  yearFilled: boolean;
+  pages: number;
+}
+
 export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,6 +54,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
   const [mode, setMode] = useState<Mode>("append");
   const [filename, setFilename] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pdf, setPdf] = useState<PdfNotice | null>(null);
 
   const preview = useMemo(
     () => (sheet && mapping ? buildTransactions(sheet, mapping) : null),
@@ -52,6 +66,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
     setMapping(null);
     setFilename("");
     setMode("append");
+    setPdf(null);
   }
 
   function closeAll() {
@@ -74,6 +89,25 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
         actions.replaceState(result.state);
         toast.success("Data berhasil dipulihkan");
         closeAll();
+        return;
+      }
+
+      // Rekening koran PDF: ubah dulu jadi tabel, sisanya alur yang sama.
+      if (/\.pdf$/i.test(file.name)) {
+        const result = await parsePdfStatement(await file.arrayBuffer());
+        if (!result.ok) {
+          toast.error(result.message);
+          setFilename("");
+          return;
+        }
+
+        setSheet(result.sheet);
+        setMapping(guessMapping(result.sheet));
+        setPdf({
+          hasBalance: result.hasBalance,
+          yearFilled: result.yearFilled,
+          pages: result.pages,
+        });
         return;
       }
 
@@ -122,8 +156,8 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       title={sheet ? "Cocokkan Kolom" : "Impor Data"}
       description={
         sheet
-          ? `${filename} · ${sheet.rows.length} baris terbaca`
-          : "Dari aplikasi lain (CSV/Excel) atau backup Dompet"
+          ? `${filename} · ${sheet.rows.length} baris terbaca${pdf ? ` dari ${pdf.pages} halaman` : ""}`
+          : "Rekening koran PDF, CSV dari aplikasi lain, atau backup Dompet"
       }
       size={sheet ? "lg" : "md"}
       footer={
@@ -163,10 +197,20 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
               {busy ? "Membaca…" : "Pilih file"}
             </span>
             <span className="text-center text-[11px] leading-relaxed text-ink-muted">
-              CSV, TSV, atau TXT dari aplikasi pencatat keuangan lain — juga file
-              backup .json dari Dompet.
+              Rekening koran <strong className="text-ink-muted">PDF</strong> dari bank, file
+              CSV/TSV/TXT dari aplikasi pencatat keuangan lain — juga file backup .json dari
+              Dompet.
             </span>
           </button>
+
+          <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
+            <FileText className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+            <p className="text-[11px] leading-relaxed text-ink-muted">
+              PDF-nya harus yang asli dari bank atau internet banking, bukan hasil scan atau
+              foto — teksnya perlu bisa diseleksi. Kalau filenya terkunci password, buka dulu
+              lalu simpan ulang tanpa password.
+            </p>
+          </div>
 
           <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
             <Table2 className="mt-0.5 size-4 shrink-0 text-ink-faint" />
@@ -180,9 +224,32 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       ) : (
         <div className="space-y-5 pb-4">
           <p className="text-[11px] leading-relaxed text-ink-muted">
-            Ini tebakan otomatis dari judul kolom di filemu. Periksa sekilas, betulkan yang
-            keliru — tidak ada yang tersimpan sampai kamu menekan Impor.
+            {pdf
+              ? "Kolom di bawah dibaca dari tata letak tabel di PDF-mu. Periksa sekilas, betulkan yang keliru — tidak ada yang tersimpan sampai kamu menekan Impor."
+              : "Ini tebakan otomatis dari judul kolom di filemu. Periksa sekilas, betulkan yang keliru — tidak ada yang tersimpan sampai kamu menekan Impor."}
           </p>
+
+          {/* Dua hal yang khas rekening koran dan bisa diam-diam merusak hasil. */}
+          {pdf?.hasBalance ? (
+            <p
+              className="rounded-xl px-3 py-2.5 text-[11px] leading-relaxed"
+              style={{ background: "var(--warning-soft)", color: "var(--warning)" }}
+            >
+              <strong>Kolom Saldo terdeteksi dan sengaja dibiarkan kosong.</strong> Itu saldo
+              berjalan rekening, bukan nominal transaksi — jangan dipetakan ke Nominal kecuali
+              kamu memang yakin.
+            </p>
+          ) : null}
+
+          {pdf?.yearFilled ? (
+            <p
+              className="rounded-xl px-3 py-2.5 text-[11px] leading-relaxed"
+              style={{ background: "var(--warning-soft)", color: "var(--warning)" }}
+            >
+              <strong>Tanggal di PDF ini ditulis tanpa tahun.</strong> Tahunnya diambil dari
+              periode yang tertera di dokumen — pastikan tanggal di pratinjau sudah benar.
+            </p>
+          ) : null}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <MapField
@@ -329,7 +396,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       <input
         ref={fileRef}
         type="file"
-        accept=".csv,.tsv,.txt,.json,text/csv,text/plain,application/json"
+        accept=".pdf,.csv,.tsv,.txt,.json,application/pdf,text/csv,text/plain,application/json"
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];
