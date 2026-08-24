@@ -47,18 +47,62 @@ export function exportTransactionsCsv(transactions: Transaction[], filename?: st
   return rows.length;
 }
 
-/** Full snapshot, so a user can move devices or keep an off-site backup. */
-export function exportBackupJson(state: AppState) {
+function backupPayload(state: AppState): { json: string; filename: string } {
   const payload = {
     app: "dompet",
     version: 1,
     exportedAt: new Date().toISOString(),
     data: state,
   };
-  download(
-    new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }),
-    `dompet-backup-${stamp()}.json`,
-  );
+  return {
+    json: JSON.stringify(payload, null, 2),
+    filename: `dompet-backup-${stamp()}.json`,
+  };
+}
+
+/** Full snapshot, so a user can move devices or keep an off-site backup. */
+export function exportBackupJson(state: AppState) {
+  const { json, filename } = backupPayload(state);
+  download(new Blob([json], { type: "application/json" }), filename);
+}
+
+export type ShareOutcome = "shared" | "downloaded" | "cancelled";
+
+/**
+ * Di ponsel, mengunduh file JSON hampir tidak berguna: filenya mendarat di
+ * folder Downloads dan pengguna harus berburu sendiri untuk mengirimkannya ke
+ * perangkat baru. Share sheet bawaan sistem menyelesaikan itu — backup bisa
+ * langsung dikirim ke WhatsApp, email, atau Drive dalam satu ketukan.
+ *
+ * Turun otomatis ke unduhan biasa di desktop dan di browser yang belum
+ * mendukung berbagi berkas.
+ */
+export async function shareBackupJson(state: AppState): Promise<ShareOutcome> {
+  const { json, filename } = backupPayload(state);
+  const file = new File([json], filename, { type: "application/json" });
+
+  const canShareFile =
+    typeof navigator !== "undefined" &&
+    typeof navigator.canShare === "function" &&
+    navigator.canShare({ files: [file] });
+
+  if (canShareFile) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: "Backup Dompet",
+        text: "Backup data keuangan Dompet. Simpan filenya, lalu pulihkan lewat Pengaturan di perangkat baru.",
+      });
+      return "shared";
+    } catch (error) {
+      // Pengguna menutup share sheet — itu bukan kegagalan, jangan diunduh diam-diam.
+      if (error instanceof DOMException && error.name === "AbortError") return "cancelled";
+      // Kegagalan lain (mis. target menolak file): jatuh ke unduhan biasa.
+    }
+  }
+
+  download(new Blob([json], { type: "application/json" }), filename);
+  return "downloaded";
 }
 
 export interface ImportResult {

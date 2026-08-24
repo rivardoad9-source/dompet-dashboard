@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Moon, Plus, Search, Sun } from "lucide-react";
+import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -79,8 +79,11 @@ function SearchBox() {
   );
 }
 
+function initialsOf(name: string) {
+  return name.trim().slice(0, 2).toUpperCase() || "DP";
+}
+
 function Avatar({ name }: { name: string }) {
-  const initials = name.trim().slice(0, 2).toUpperCase() || "DP";
   return (
     <Link
       href="/pengaturan"
@@ -88,11 +91,46 @@ function Avatar({ name }: { name: string }) {
       aria-label="Buka pengaturan"
     >
       <span className="grid size-9 place-items-center rounded-xl bg-brand-soft text-xs font-extrabold text-brand">
-        {initials}
+        {initialsOf(name)}
       </span>
       <span className="hidden text-left leading-tight 2xl:block">
         <span className="block text-xs font-bold text-ink">{name}</span>
         <span className="block text-[10px] text-ink-faint">Akun lokal</span>
+      </span>
+    </Link>
+  );
+}
+
+/**
+ * Satu-satunya jalan ke Pengaturan di ponsel.
+ *
+ * Bottom nav dikunci empat tab sesuai PRD, dan Pengaturan bukan salah satunya —
+ * tanpa tombol ini, backup, restore, dan ganti nama sama sekali tidak bisa
+ * dijangkau dari HP. Ikon gerigi kecil di pojok membedakannya dari avatar biasa,
+ * supaya jelas ini pintu ke pengaturan dan bukan sekadar penanda profil.
+ */
+function MobileProfileButton({ name, active }: { name: string; active: boolean }) {
+  return (
+    <Link
+      href="/pengaturan"
+      aria-label="Buka pengaturan, backup, dan ekspor data"
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        // 44px: batas minimum target sentuh yang nyaman untuk ibu jari.
+        "relative grid size-11 shrink-0 place-items-center rounded-xl text-xs font-extrabold",
+        "transition-all duration-200 ease-out active:scale-95",
+        active ? "bg-brand text-on-brand" : "bg-brand-soft text-brand hover:bg-brand-tint",
+      )}
+    >
+      {initialsOf(name)}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute -bottom-0.5 -right-0.5 grid size-4 place-items-center rounded-full border-2 border-bg",
+          active ? "bg-on-brand text-brand" : "bg-brand text-on-brand",
+        )}
+      >
+        <Settings className="size-2.5" />
       </span>
     </Link>
   );
@@ -128,6 +166,7 @@ export function Topbar() {
         )}
         <PrivacyToggle />
         <ThemeToggle />
+        <MobileProfileButton name={state.settings.name} active={pathname === "/pengaturan"} />
       </div>
 
       {/* ---- Desktop ---- */}
