@@ -285,8 +285,50 @@ Lapisan penyimpanan terisolasi di dua fungsi yang sama. Menambahkan backend bera
 
 ---
 
-## 9. Sebelum rilis
+## 9. Memasang untuk pengguna sungguhan (bukan demo)
 
+Kalau template ini kamu serahkan ke klien atau pengguna akhir — bukan dipajang
+sebagai demo — ada satu saklar yang **wajib** diubah, di `src/lib/config.ts`:
+
+```ts
+export const DEMO_DATA_ON_FIRST_RUN = false;
+```
+
+Alasannya bukan kosmetik. Dengan `true`, aplikasi mengisi 238 transaksi contoh
+setiap kali menemukan penyimpanan kosong. Kalau penyimpanan browser pengguna
+sempat terhapus, yang mereka lihat saat membuka aplikasi bukan halaman kosong,
+melainkan **catatan keuangan asing menggantikan catatan mereka**. Secara teknis
+itu bukan kehilangan data yang disebabkan aplikasi, tapi bagi penggunanya tidak
+ada bedanya — dan kepercayaan tidak kembali setelah itu.
+
+Saklar kedua di file yang sama mengatur pengingat backup:
+
+```ts
+export const BACKUP_REMINDER_AFTER = 20; // 0 untuk mematikan
+```
+
+### Yang sudah dikerjakan aplikasi untuk menjaga data
+
+| Lapisan | Cara kerja |
+|---|---|
+| Penyimpanan permanen | `navigator.storage.persist()` dipanggil saat aplikasi hidup, supaya browser tidak membuang data ini saat memori perangkat menipis. Statusnya terlihat di Pengaturan → Keamanan Data |
+| Urungkan | Setiap tindakan merusak (Hapus semua, Muat demo, Impor "Ganti semua", Pulihkan backup) menyimpan snapshot lebih dulu, satu tingkat |
+| Pengingat backup | Menghitung transaksi yang tercatat sejak backup terakhir dan memperingatkan setelah ambang di atas |
+| Data rusak | Kalau JSON tersimpan gagal dibaca, aplikasi **tidak menimpanya** — sisa datanya masih bisa diselamatkan manual dari penyimpanan browser |
+
+Penyimpanan permanen paling mungkin dikabulkan browser kalau aplikasinya sudah
+dipasang ke layar utama. Arahkan penggunamu untuk **Add to Home Screen** di
+kunjungan pertama.
+
+Yang tetap tidak bisa dicegah kode mana pun: pengguna menekan *Hapus data situs*
+di pengaturan browser, atau berpindah HP. Untuk dua hal itu, backup berkala
+adalah satu-satunya jawaban.
+
+---
+
+## 10. Sebelum rilis
+
+- [ ] Setel `DEMO_DATA_ON_FIRST_RUN = false` di `src/lib/config.ts` kalau ini untuk pengguna sungguhan
 - [ ] Ganti `--brand` dan warna turunannya, lalu jalankan `npm run icons`
 - [ ] Ubah nama aplikasi di `src/app/layout.tsx` (metadata) dan `public/manifest.webmanifest`
 - [ ] Ganti tulisan "Dompet" di `src/components/shell/Logo.tsx` dan `src/components/shell/Sidebar.tsx`

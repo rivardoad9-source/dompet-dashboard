@@ -123,7 +123,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
           toast.error(result.error ?? "Gagal membaca file.");
           return;
         }
-        actions.replaceState(result.state);
+        actions.replaceState(result.state, "Pulihkan dari backup");
         toast.success("Data berhasil dipulihkan");
         closeAll();
         return;
@@ -192,7 +192,10 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
 
     if (mode === "replace") {
       const current = readState();
-      actions.replaceState({ ...current, transactions: preview.transactions });
+      actions.replaceState(
+        { ...current, transactions: preview.transactions },
+        "Impor: ganti semua transaksi",
+      );
     } else {
       actions.addTransactions(preview.transactions);
     }
@@ -445,7 +448,8 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
               style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
             >
               Semua transaksi yang ada sekarang akan dihapus dan diganti isi file ini. Anggaran
-              dan target tabungan tidak ikut terhapus.
+              dan target tabungan tidak ikut terhapus. Masih bisa diurungkan lewat kartu{" "}
+              <strong>Keamanan Data</strong> di Pengaturan kalau ternyata salah pilih.
             </p>
           ) : null}
         </div>

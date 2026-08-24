@@ -1,4 +1,5 @@
 import { getCategory } from "./categories";
+import { markBackupTaken } from "./durability";
 import type { AppState, Transaction } from "./types";
 
 function escapeCsv(value: string | number): string {
@@ -64,6 +65,7 @@ function backupPayload(state: AppState): { json: string; filename: string } {
 export function exportBackupJson(state: AppState) {
   const { json, filename } = backupPayload(state);
   download(new Blob([json], { type: "application/json" }), filename);
+  markBackupTaken(state.transactions.length);
 }
 
 export type ShareOutcome = "shared" | "downloaded" | "cancelled";
@@ -156,11 +158,16 @@ export function exportFilename(extension: string, scope = "transaksi"): string {
 export async function shareBackupJson(state: AppState): Promise<ShareOutcome> {
   const { json, filename } = backupPayload(state);
 
-  return deliverBlob(
+  const outcome = await deliverBlob(
     new Blob([json], { type: "application/json" }),
     filename,
     "Backup data keuangan Dompet. Simpan filenya, lalu pulihkan lewat Pengaturan di perangkat baru.",
   );
+
+  // Dibatalkan berarti tidak ada berkas yang benar-benar keluar, jadi jangan
+  // dihitung sebagai backup — pengingatnya harus tetap menyala.
+  if (outcome !== "cancelled") markBackupTaken(state.transactions.length);
+  return outcome;
 }
 
 export interface ImportResult {
