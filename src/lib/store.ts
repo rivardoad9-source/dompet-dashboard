@@ -120,6 +120,26 @@ function migrateIds(state: AppState): AppState {
   };
 }
 
+/**
+ * Membuka aplikasi dengan `?demo` memaksa dataset contoh dimuat.
+ *
+ * Gunanya satu: memberi tautan yang bisa dicoba calon pembeli tanpa perlu
+ * memasang deployment kedua yang harus dirawat terpisah.
+ *
+ * Aman dipakai berdampingan dengan pengguna sungguhan, karena nilainya hanya
+ * dipakai ketika penyimpanan benar-benar kosong — pengguna yang sudah punya
+ * catatan tidak akan pernah tertimpa, bahkan kalau tautan itu tidak sengaja
+ * mereka buka.
+ */
+function demoRequested(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).has("demo");
+  } catch {
+    return false;
+  }
+}
+
 let hydrationStarted = false;
 
 export function hydrateStore() {
@@ -129,8 +149,9 @@ export function hydrateStore() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     // Kunjungan pertama: tampilkan dataset demo supaya template langsung hidup.
-    // Bisa dimatikan lewat config untuk pemasangan ke pengguna sungguhan.
-    const first = DEMO_DATA_ON_FIRST_RUN ? buildSeedState() : emptyState();
+    // Bisa dimatikan lewat config untuk pemasangan ke pengguna sungguhan, dan
+    // dinyalakan per-kunjungan lewat `?demo` untuk tautan pratinjau.
+    const first = DEMO_DATA_ON_FIRST_RUN || demoRequested() ? buildSeedState() : emptyState();
     const next = raw ? reconcile(JSON.parse(raw)) : first;
     commit(next, !raw);
   } catch {

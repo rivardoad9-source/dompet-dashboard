@@ -21,6 +21,12 @@
  *
  * Dengan `false`, perangkat baru dibuka dalam keadaan kosong dan pengguna
  * mulai mencatat atau memulihkan backup-nya.
+ *
+ * Tetap `false` pun kamu masih punya tautan pratinjau: membuka aplikasi dengan
+ * `?demo` di ujung URL memuat dataset contoh untuk kunjungan itu saja. Aman
+ * berdampingan dengan pengguna sungguhan — dataset contoh hanya dipakai kalau
+ * penyimpanan perangkat itu benar-benar kosong, jadi catatan yang sudah ada
+ * tidak pernah tertimpa.
  */
 export const DEMO_DATA_ON_FIRST_RUN = false;
 
