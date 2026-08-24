@@ -1,26 +1,356 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   DOMPET — Design Tokens
+   Edit this block to rebrand the whole template. Nothing else needs to change.
+   See CUSTOMIZATION.md for a walkthrough.
+   ========================================================================== */
+
+/* --- Theme: Warm (default, per PRD "minimalis-organik / warm earthy tone") --- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: #fdfbf7;
+  --bg-subtle: #f4ede4;
+  --surface: #ffffff;
+  --surface-2: #faf6f0;
+  --surface-3: #f4ede4;
+
+  /* Ink */
+  --ink: #2c2523;
+  --ink-muted: #6b5f58;
+  --ink-faint: #9a8b81;
+  --line: #ebe0d3;
+  --line-strong: #ddcdba;
+
+  /* Brand — terracotta / earth */
+  --brand: #8c6d58;
+  --brand-strong: #6f5544;
+  --brand-soft: #f1e6da;
+  --brand-tint: #e3d2c2;
+  --on-brand: #ffffff;
+
+  /* Secondary accent (charts, gradients) */
+  --accent: #a8846a;
+  --accent-soft: #f3e8dd;
+
+  /* Semantic */
+  --success: #2e7d32;
+  --success-soft: #e3f0e4;
+  --warning: #b47216;
+  --warning-soft: #f8ecd8;
+  --danger: #c62828;
+  --danger-soft: #f8e3e3;
+  --on-danger: #ffffff;
+
+  /* Hero gradient (balance card) */
+  --hero-from: #4b3a30;
+  --hero-to: #8c6d58;
+  --hero-ink: #fdfbf7;
+  --hero-ink-muted: #ddcbbc;
+
+  /* Effects */
+  --ring: #8c6d58;
+  --shadow-sm: 0 1px 2px rgba(64, 45, 33, 0.05);
+  --shadow-md: 0 4px 16px -4px rgba(64, 45, 33, 0.1), 0 1px 3px rgba(64, 45, 33, 0.05);
+  --shadow-lg: 0 18px 44px -18px rgba(64, 45, 33, 0.28);
+  --sheet-scrim: rgba(44, 37, 35, 0.42);
+
+  /* Categorical chart palette — distinct hues, AA-safe on light surfaces */
+  --cat-1: #8c6d58;
+  --cat-2: #b07d4f;
+  --cat-3: #7a8c5a;
+  --cat-4: #6f8ca0;
+  --cat-5: #a1698c;
+  --cat-6: #c2874a;
+  --cat-7: #5f8f7d;
+  --cat-8: #94795f;
 }
 
+/* --- Theme: Midnight (deep indigo admin, warm terracotta accent) --- */
+[data-theme="midnight"] {
+  --bg: #0d1230;
+  --bg-subtle: #131a3c;
+  --surface: #161e45;
+  --surface-2: #1c2553;
+  --surface-3: #232d63;
+
+  --ink: #eef1ff;
+  --ink-muted: #a7b0d4;
+  --ink-faint: #7480ab;
+  --line: #27306a;
+  --line-strong: #333e83;
+
+  --brand: #e0a17c;
+  --brand-strong: #eeb794;
+  --brand-soft: #2a2450;
+  --brand-tint: #3a3068;
+  --on-brand: #2a1a10;
+
+  --accent: #7c6bf5;
+  --accent-soft: #241f56;
+
+  --success: #4ade80;
+  --success-soft: #14301f;
+  --warning: #fbbf24;
+  --warning-soft: #33270a;
+  --danger: #fb7185;
+  --danger-soft: #38151f;
+  --on-danger: #3d0c17;
+
+  --hero-from: #2b2470;
+  --hero-to: #5b46b8;
+  --hero-ink: #f4f2ff;
+  --hero-ink-muted: #bfb7e8;
+
+  --ring: #7c6bf5;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 18px -4px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 20px 50px -20px rgba(0, 0, 0, 0.75);
+  --sheet-scrim: rgba(5, 8, 24, 0.66);
+
+  --cat-1: #e0a17c;
+  --cat-2: #7c6bf5;
+  --cat-3: #4ade80;
+  --cat-4: #56b8e6;
+  --cat-5: #f472b6;
+  --cat-6: #fbbf24;
+  --cat-7: #2dd4bf;
+  --cat-8: #a5b4fc;
+}
+
+/* --- Map tokens into Tailwind's utility namespace --- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-tint: var(--brand-tint);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-on-danger: var(--on-danger);
+
+  --color-hero-ink: var(--hero-ink);
+  --color-hero-ink-muted: var(--hero-ink-muted);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: var(--shadow-md);
+  --shadow-float: var(--shadow-lg);
+
+  /* Mobile-first viewport ceiling from the PRD (`max-w-app`) */
+  --container-app: 430px;
+  /* Desktop admin content ceiling (`max-w-shell`) */
+  --container-shell: 1440px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Lets you write `midnight:...` when a rule truly cannot be expressed in tokens */
+@custom-variant midnight (&:where([data-theme="midnight"], [data-theme="midnight"] *));
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: tabular-nums;
+  overscroll-behavior-y: contain;
+}
+
+/* Every interactive element gets a visible, themed focus ring */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Slim, themed scrollbars for the desktop admin shell */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ==========================================================================
+   Motion — 150–300ms, meaningful, and always opt-out-able
+   ========================================================================== */
+
+@keyframes dp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dp-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes dp-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dp-pop {
+  0% {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes dp-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Progress fills sweep in from the left on mount */
+@keyframes dp-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.dp-bar-grow {
+  transform-origin: left center;
+  animation: dp-bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dp-rise {
+  animation: dp-fade-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dp-sheet {
+  animation: dp-sheet-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dp-scrim {
+  animation: dp-scrim-in 0.22s ease-out both;
+}
+
+.dp-pop {
+  animation: dp-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Skeleton shimmer */
+.dp-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.dp-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--surface-3), transparent);
+  animation: dp-shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.dp-hero {
+  background-image: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+}
+
+/* Respects the notch / home indicator on installed PWAs */
+.dp-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.dp-safe-top {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+.dp-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.dp-no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Recharts inherits our focus ring otherwise */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
 }
