@@ -69,6 +69,82 @@ export function exportBackupJson(state: AppState) {
 export type ShareOutcome = "shared" | "downloaded" | "cancelled";
 
 /**
+ * Batas waktu menunggu share sheet.
+ *
+ * `navigator.share()` seharusnya selesai (pengguna memilih aplikasi) atau
+ * ditolak dengan AbortError (pengguna menutupnya). Tapi di sebagian webview
+ * dan lingkungan otomatis, promise-nya tidak pernah selesai sama sekali —
+ * dan tanpa batas ini tombolnya macet di "Menyiapkan…" selamanya tanpa satu
+ * pun pesan.
+ *
+ * Kalau batas ini terlampaui, berkasnya diunduh biasa: pengguna tetap
+ * mendapatkan filenya. Risikonya cuma satu berkas ganda di folder Downloads
+ * kalau ternyata share-nya berhasil juga — jauh lebih baik daripada tidak
+ * mendapat apa-apa.
+ */
+const SHARE_TIMEOUT_MS = 30_000;
+
+const SHARE_TIMED_OUT = Symbol("share-timeout");
+
+async function shareWithTimeout(data: ShareData): Promise<"shared" | "cancelled" | typeof SHARE_TIMED_OUT> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const timeout = new Promise<typeof SHARE_TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(SHARE_TIMED_OUT), SHARE_TIMEOUT_MS);
+  });
+
+  const attempt = navigator
+    .share(data)
+    .then(() => "shared" as const)
+    .catch((error: unknown) => {
+      // Pengguna menutup share sheet — bukan kegagalan.
+      if (error instanceof DOMException && error.name === "AbortError") return "cancelled" as const;
+      return SHARE_TIMED_OUT; // kegagalan lain diperlakukan sama: unduh saja
+    });
+
+  try {
+    return await Promise.race([attempt, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
+ * Menyalurkan satu berkas ke pengguna dengan cara terbaik yang tersedia.
+ *
+ * Di ponsel, share sheet bawaan sistem jauh lebih berguna daripada unduhan:
+ * berkas bisa langsung dikirim ke WhatsApp, email, atau Drive tanpa pengguna
+ * perlu berburu di folder Downloads. Di desktop dan browser yang belum
+ * mendukung berbagi berkas, otomatis turun ke unduhan biasa.
+ */
+export async function deliverBlob(
+  blob: Blob,
+  filename: string,
+  shareText: string,
+): Promise<ShareOutcome> {
+  const file = new File([blob], filename, { type: blob.type });
+
+  const canShareFile =
+    typeof navigator !== "undefined" &&
+    typeof navigator.canShare === "function" &&
+    navigator.canShare({ files: [file] });
+
+  if (canShareFile) {
+    const result = await shareWithTimeout({ files: [file], title: filename, text: shareText });
+    if (result === "shared") return "shared";
+    if (result === "cancelled") return "cancelled";
+  }
+
+  download(blob, filename);
+  return "downloaded";
+}
+
+/** Nama berkas berstempel tanggal, dipakai semua format ekspor. */
+export function exportFilename(extension: string, scope = "transaksi"): string {
+  return `dompet-${scope}-${stamp()}.${extension}`;
+}
+
+/**
  * Di ponsel, mengunduh file JSON hampir tidak berguna: filenya mendarat di
  * folder Downloads dan pengguna harus berburu sendiri untuk mengirimkannya ke
  * perangkat baru. Share sheet bawaan sistem menyelesaikan itu — backup bisa
@@ -79,30 +155,12 @@ export type ShareOutcome = "shared" | "downloaded" | "cancelled";
  */
 export async function shareBackupJson(state: AppState): Promise<ShareOutcome> {
   const { json, filename } = backupPayload(state);
-  const file = new File([json], filename, { type: "application/json" });
 
-  const canShareFile =
-    typeof navigator !== "undefined" &&
-    typeof navigator.canShare === "function" &&
-    navigator.canShare({ files: [file] });
-
-  if (canShareFile) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: "Backup Dompet",
-        text: "Backup data keuangan Dompet. Simpan filenya, lalu pulihkan lewat Pengaturan di perangkat baru.",
-      });
-      return "shared";
-    } catch (error) {
-      // Pengguna menutup share sheet — itu bukan kegagalan, jangan diunduh diam-diam.
-      if (error instanceof DOMException && error.name === "AbortError") return "cancelled";
-      // Kegagalan lain (mis. target menolak file): jatuh ke unduhan biasa.
-    }
-  }
-
-  download(new Blob([json], { type: "application/json" }), filename);
-  return "downloaded";
+  return deliverBlob(
+    new Blob([json], { type: "application/json" }),
+    filename,
+    "Backup data keuangan Dompet. Simpan filenya, lalu pulihkan lewat Pengaturan di perangkat baru.",
+  );
 }
 
 export interface ImportResult {

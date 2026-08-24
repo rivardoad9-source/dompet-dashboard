@@ -71,6 +71,11 @@ function update(fn: (state: AppState) => AppState) {
   commit(fn(snapshot.state));
 }
 
+/** Pembacaan non-reaktif, untuk event handler yang tidak perlu berlangganan. */
+export function readState(): AppState {
+  return snapshot.state;
+}
+
 /* ==========================================================================
    Hidrasi
    ========================================================================== */
@@ -175,6 +180,12 @@ export const actions = {
 
   deleteTransaction(id: string) {
     update((s) => ({ ...s, transactions: s.transactions.filter((t) => t.id !== id) }));
+  },
+
+  /** Penambahan massal dari importer — satu commit, bukan satu per baris. */
+  addTransactions(list: Transaction[]) {
+    if (!list.length) return;
+    update((s) => ({ ...s, transactions: [...s.transactions, ...list] }));
   },
 
   /** Mengembalikan transaksi yang baru dihapus — menyalakan tombol Urungkan. */

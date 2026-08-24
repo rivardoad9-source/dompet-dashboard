@@ -66,4 +66,5 @@ export function categoriesOfType(type: TxType): Category[] {
 }
 
 export const EXPENSE_CATEGORIES = categoriesOfType("out");
+export const INCOME_CATEGORIES = categoriesOfType("in");
 

@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <TransactionSheetProvider>
-        <div className="min-h-dvh bg-bg">
+        <div className="dp-no-print min-h-dvh bg-bg">
           <Sidebar />
 
           <div className="lg:pl-[264px]">
