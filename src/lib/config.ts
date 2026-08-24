@@ -22,7 +22,7 @@
  * Dengan `false`, perangkat baru dibuka dalam keadaan kosong dan pengguna
  * mulai mencatat atau memulihkan backup-nya.
  */
-export const DEMO_DATA_ON_FIRST_RUN = true;
+export const DEMO_DATA_ON_FIRST_RUN = false;
 
 /**
  * Ingatkan untuk mengambil backup setelah sekian transaksi baru sejak backup
