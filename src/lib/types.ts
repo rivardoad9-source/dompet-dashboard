@@ -2,6 +2,9 @@ export type TxType = "in" | "out";
 
 export type ThemeName = "warm" | "midnight";
 
+/** Angka besar yang disorot di kartu utama Beranda. Tabelnya di `hero-metrics.ts`. */
+export type HeroMetric = "saldo" | "keluar" | "masuk" | "sisa" | "anggaran";
+
 export interface Transaction {
   id: string;
   type: TxType;
@@ -42,6 +45,8 @@ export interface Settings {
   theme: ThemeName;
   /** Hide every rupiah figure behind a mask — handy for demos and screenshots. */
   privacy: boolean;
+  /** Which figure headlines the balance card on the home page. */
+  heroMetric: HeroMetric;
 }
 
 export interface AppState {

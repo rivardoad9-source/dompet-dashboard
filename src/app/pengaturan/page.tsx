@@ -33,14 +33,16 @@ import {
 } from "@/lib/durability";
 import { exportBackupJson, readBackupFile, shareBackupJson } from "@/lib/export";
 import { monthKey } from "@/lib/format";
+import { HERO_METRICS } from "@/lib/hero-metrics";
 import { STORAGE_KEY, actions, useStore } from "@/lib/store";
+import type { HeroMetric } from "@/lib/types";
 import { PageIntro } from "@/components/shell/AppShell";
 import { ExportSheet } from "@/components/export/ExportSheet";
 import { ImportSheet } from "@/components/export/ImportSheet";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { ConfirmDialog, Skeleton } from "@/components/ui/Feedback";
-import { Field, Input } from "@/components/ui/Field";
+import { Field, Input, Select } from "@/components/ui/Field";
 import { Segmented } from "@/components/ui/Segmented";
 import { useToast } from "@/components/ui/Toast";
 
@@ -229,6 +231,24 @@ export default function PengaturanPage() {
                   { value: "midnight", label: "Midnight" },
                 ]}
               />
+            </Field>
+
+            <Field
+              label="Angka utama di Beranda"
+              htmlFor="hero-metric"
+              hint="Bisa juga diganti dengan mengetuk labelnya langsung di kartu Beranda."
+            >
+              <Select
+                id="hero-metric"
+                value={settings.heroMetric}
+                onChange={(e) => actions.setSettings({ heroMetric: e.target.value as HeroMetric })}
+              >
+                {HERO_METRICS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </Select>
             </Field>
 
             <ToggleRow

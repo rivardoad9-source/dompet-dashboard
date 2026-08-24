@@ -285,6 +285,39 @@ Lapisan penyimpanan terisolasi di dua fungsi yang sama. Menambahkan backend bera
 
 ---
 
+## 8b. Menambah metrik di kartu utama Beranda
+
+Angka besar di kartu Beranda bisa diganti pengguna, dan pilihannya berasal dari
+satu tabel di `src/lib/hero-metrics.ts`. Menambah pilihan cukup menambah satu
+entri:
+
+```ts
+{
+  id: "tersimpan",                      // tambahkan juga ke HeroMetric di types.ts
+  label: "Total tersimpan",
+  icon: PiggyBank,
+  scope: "total",                       // "month" akan diberi sufiks "· AGU 26"
+  hint: "Dana yang sudah diparkir di semua target tabungan.",
+  value: (c) => c.saved,                // tambahkan field-nya ke HeroContext
+  companions: [MASUK, KELUAR],
+}
+```
+
+Satu aturan yang harus dijaga: **`companions` tidak boleh memuat angka yang sama
+dengan `value`.** Kartu yang menampilkan nominal yang sama dua kali terbaca
+seperti bug. Itu sebabnya pasangannya ditulis eksplisit per metrik, bukan
+diturunkan otomatis.
+
+Kalau angkanya belum tersedia di `HeroContext`, hitung di `src/app/page.tsx`
+(sudah ada `useMemo` yang menghitung semuanya) lalu teruskan ke `BalanceHero`.
+Jangan menulis rumus baru di `hero-metrics.ts` — file itu sengaja hanya membaca,
+supaya seluruh perhitungan tetap terkumpul di `src/lib/stats.ts`.
+
+Pemilihnya di Pengaturan → Tampilan membaca tabel yang sama, jadi tidak ada
+tempat kedua yang perlu diperbarui.
+
+---
+
 ## 9. Memasang untuk pengguna sungguhan (bukan demo)
 
 Kalau template ini kamu serahkan ke klien atau pengguna akhir — bukan dipajang

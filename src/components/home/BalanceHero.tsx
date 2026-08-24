@@ -1,30 +1,55 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, Plus, PiggyBank } from "lucide-react";
+import { ChevronDown, Plus, PiggyBank } from "lucide-react";
 import Link from "next/link";
-import { formatCompact, monthLabel } from "@/lib/format";
-import type { MonthTotals } from "@/lib/stats";
+import { useState } from "react";
+import { cn } from "@/lib/cn";
+import { formatCompact } from "@/lib/format";
+import { getHeroMetric, heroLabel, type HeroContext, type HeroStat } from "@/lib/hero-metrics";
+import type { BudgetSummary, MonthTotals } from "@/lib/stats";
+import { actions } from "@/lib/store";
+import type { HeroMetric } from "@/lib/types";
 import { Money } from "@/components/ui/Money";
 import { useTransactionSheet } from "@/components/transaction/TransactionSheetProvider";
+import { HeroMetricSheet } from "./HeroMetricSheet";
 
 /**
- * The "Header Saldo" from PRD §3A — total liquid balance plus this month's
- * income and spending, on the one card that anchors the whole dashboard.
+ * The "Header Saldo" from PRD §3A — the one card that anchors the dashboard.
+ *
+ * Angka besarnya bisa diganti pengguna lewat label yang berfungsi sebagai
+ * tombol; dua angka pendampingnya ikut menyesuaikan supaya tidak ada nominal
+ * yang tampil dua kali dalam satu kartu. Tabelnya di `lib/hero-metrics.ts`.
  */
 export function BalanceHero({
   balance,
   saved,
   totals,
+  summary,
+  metric,
   monthKey: key,
   privacy,
 }: {
   balance: number;
   saved: number;
   totals: MonthTotals;
+  summary: BudgetSummary;
+  metric: HeroMetric;
   monthKey: string;
   privacy: boolean;
 }) {
   const sheet = useTransactionSheet();
+  const [picking, setPicking] = useState(false);
+
+  const context: HeroContext = {
+    balance,
+    income: totals.income,
+    expense: totals.expense,
+    net: totals.net,
+    budgetRemaining: summary.remaining,
+    budgetLimit: summary.limit,
+  };
+
+  const active = getHeroMetric(metric);
 
   return (
     <div className="dp-hero dp-rise relative overflow-hidden rounded-card p-5 text-hero-ink shadow-float sm:p-6">
@@ -34,13 +59,27 @@ export function BalanceHero({
 
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-hero-ink-muted">
-              Saldo likuid
-            </p>
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              aria-haspopup="dialog"
+              aria-expanded={picking}
+              className={cn(
+                "flex max-w-full cursor-pointer items-center gap-1.5 rounded-lg py-0.5 pr-1",
+                "text-[11px] font-bold uppercase tracking-[0.14em] text-hero-ink-muted",
+                "transition-colors duration-200 hover:text-hero-ink",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current",
+              )}
+            >
+              <span className="truncate">{heroLabel(active, key)}</span>
+              <ChevronDown className="size-3.5 shrink-0" strokeWidth={3} />
+            </button>
+
             <Money
-              value={balance}
+              value={active.value(context)}
               privacy={privacy}
+              signed={active.signed}
               className="mt-1.5 block text-[34px] font-extrabold leading-none tracking-tighter sm:text-[40px]"
             />
           </div>
@@ -55,18 +94,15 @@ export function BalanceHero({
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Stat
-            icon={<ArrowDownLeft className="size-3.5" />}
-            label={`Masuk · ${monthLabel(key, true)}`}
-            value={totals.income}
-            privacy={privacy}
-          />
-          <Stat
-            icon={<ArrowUpRight className="size-3.5" />}
-            label={`Keluar · ${monthLabel(key, true)}`}
-            value={totals.expense}
-            privacy={privacy}
-          />
+          {active.companions.map((stat) => (
+            <Stat
+              key={stat.label}
+              stat={stat}
+              context={context}
+              monthKey={key}
+              privacy={privacy}
+            />
+          ))}
         </div>
 
         <button
@@ -78,31 +114,46 @@ export function BalanceHero({
           Catat Transaksi
         </button>
       </div>
+
+      <HeroMetricSheet
+        open={picking}
+        onClose={() => setPicking(false)}
+        value={active.id}
+        onChange={(heroMetric) => actions.setSettings({ heroMetric })}
+        context={context}
+        monthKey={key}
+        privacy={privacy}
+      />
     </div>
   );
 }
 
 function Stat({
-  icon,
-  label,
-  value,
+  stat,
+  context,
+  monthKey: key,
   privacy,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
+  stat: HeroStat;
+  context: HeroContext;
+  monthKey: string;
   privacy: boolean;
 }) {
+  const Icon = stat.icon;
+
   return (
     <div className="rounded-xl bg-hero-ink/10 p-3 backdrop-blur">
       <div className="flex items-center gap-1.5 text-hero-ink-muted">
-        {icon}
-        <span className="truncate text-[10px] font-bold uppercase tracking-wider">{label}</span>
+        <Icon className="size-3.5 shrink-0" />
+        <span className="truncate text-[10px] font-bold uppercase tracking-wider">
+          {heroLabel(stat, key)}
+        </span>
       </div>
       <Money
-        value={value}
+        value={stat.value(context)}
         privacy={privacy}
         compact
+        signed={stat.signed}
         className="mt-1 block text-lg font-extrabold tracking-tight"
       />
     </div>
