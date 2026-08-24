@@ -45,6 +45,7 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 **Pengaturan**
 - Nama panggilan, tema, dan mode sembunyikan nominal
 - **Backup & Kirim** lewat share sheet — backup langsung ke WhatsApp, email, atau Drive
+- Kartu **Keamanan Data**: status penyimpanan permanen, pengingat backup, dan tombol urungkan
 - Muat ulang data demo, hapus semua data, ringkasan isi database lokal
 
 **Ekspor lima format** — semuanya tanpa dependency tambahan
@@ -76,11 +77,19 @@ Ekspor dari **Money Manager**, **Wallet**, dan sejenisnya bisa langsung dipilih 
 - Hasilnya masuk ke wizard koreksi yang sama dengan CSV — tetap ditampilkan sebelum disimpan
 - PDF hasil scan dan PDF terkunci password ditolak dengan pesan yang menjelaskan langkah berikutnya, bukan error mentah
 
+**Ketahanan data** — karena tanpa server, kehilangan data tidak bisa dipulihkan siapa pun
+- **Penyimpanan permanen** diminta lewat `navigator.storage.persist()`, supaya browser tidak membuang data saat memori perangkat menipis
+- **Urungkan** untuk setiap tindakan merusak: Hapus semua, Muat demo, Impor "Ganti semua", dan Pulihkan backup semuanya menyimpan snapshot lebih dulu
+- **Pengingat backup** yang menghitung transaksi sejak backup terakhir
+- Kartu **Keamanan Data** di Pengaturan menampilkan status penyimpanan, kuota terpakai, dan waktu backup terakhir
+- Data tersimpan yang rusak tidak pernah ditimpa diam-diam
+- Saklar `DEMO_DATA_ON_FIRST_RUN` di `src/lib/config.ts` — **setel `false` sebelum menyerahkan ke pengguna sungguhan**, lihat [CUSTOMIZATION.md](CUSTOMIZATION.md#9-memasang-untuk-pengguna-sungguhan-bukan-demo)
+
 **Lain-lain**
 - PWA: manifest, service worker offline, ikon maskable, shortcut aplikasi
 - Aksesibel: target sentuh ≥44px, fokus keyboard terlihat, `aria-label` pada semua kontrol ikon, status tidak pernah hanya bergantung pada warna
 - `prefers-reduced-motion` dihormati di seluruh animasi
-- Data demo 6 bulan yang dibuat otomatis pada kunjungan pertama
+- Data demo 6 bulan pada kunjungan pertama — bisa dimatikan lewat `src/lib/config.ts`
 
 ---
 
@@ -167,6 +176,8 @@ src/
     ├── export.ts             Penyaluran berkas (share sheet + unduhan), CSV, JSON
     ├── hooks.ts              Hook bulan berjalan, reduced-motion, mounted
     ├── nav.ts                Konfigurasi navigasi
+    ├── config.ts             ⭐ Saklar data demo & pengingat backup
+    ├── durability.ts         Penyimpanan permanen, urungkan, jejak backup
     └── formats/
         ├── zip.ts            Penulis ZIP minimal (dasar .xlsx)
         ├── xlsx.ts           Pembuat file Excel asli

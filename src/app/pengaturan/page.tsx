@@ -10,12 +10,27 @@ import {
   Palette,
   RotateCcw,
   Share2,
+  ShieldAlert,
+  ShieldCheck,
   Smartphone,
   Trash2,
+  Undo2,
   Upload,
   User,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BACKUP_REMINDER_AFTER } from "@/lib/config";
+import {
+  checkPersistence,
+  estimateStorage,
+  readMeta,
+  readUndo,
+  requestPersistence,
+  type PersistenceState,
+  type StorageMeta,
+  type StorageUsage,
+  type UndoSnapshot,
+} from "@/lib/durability";
 import { exportBackupJson, readBackupFile, shareBackupJson } from "@/lib/export";
 import { monthKey } from "@/lib/format";
 import { STORAGE_KEY, actions, useStore } from "@/lib/store";
@@ -58,7 +73,7 @@ export default function PengaturanPage() {
       toast.error(result.error ?? "Gagal membaca file.");
       return;
     }
-    actions.replaceState(result.state);
+    actions.replaceState(result.state, "Pulihkan dari backup");
     toast.success("Data berhasil dipulihkan");
   }
 
@@ -239,27 +254,13 @@ export default function PengaturanPage() {
           </CardBody>
         </Card>
 
-        {/* --- Info --- */}
-        <Card className="dp-rise col-span-12 xl:col-span-6">
-          <CardHeader title="Penyimpanan" subtitle="Ringkasan isi database lokal" />
-          <CardBody className="pt-2">
-            <dl className="space-y-2.5">
-              <InfoRow label="Transaksi" value={`${transactions.length} catatan`} />
-              <InfoRow label="Kategori dianggarkan" value={`${budgets.length} kategori`} />
-              <InfoRow label="Target tabungan" value={`${goals.length} target`} />
-              <InfoRow label="Ukuran data" value={`${(bytes / 1024).toFixed(1)} KB`} />
-              <InfoRow label="Kunci localStorage" value={STORAGE_KEY} mono />
-            </dl>
-
-            <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
-              <Info className="mt-0.5 size-4 shrink-0 text-ink-faint" />
-              <p className="text-[11px] leading-relaxed text-ink-muted">
-                Menghapus cache browser akan menghapus data ini. Ambil Backup JSON secara berkala,
-                terutama sebelum ganti browser atau ganti HP.
-              </p>
-            </div>
-          </CardBody>
-        </Card>
+        {/* --- Keamanan data --- */}
+        <DataSafetyCard
+          transactions={transactions.length}
+          budgets={budgets.length}
+          goals={goals.length}
+          bytes={bytes}
+        />
       </div>
 
       <p className="flex items-center justify-center gap-2 pb-2 text-[11px] text-ink-faint">
@@ -285,7 +286,7 @@ export default function PengaturanPage() {
           toast.success("Semua data dihapus");
         }}
         title="Hapus semua data?"
-        description="Transaksi, anggaran, dan target tabungan akan hilang permanen. Pastikan kamu sudah mengambil backup JSON."
+        description="Transaksi, anggaran, dan target tabungan akan dikosongkan. Keadaan sekarang disimpan sekali sebagai cadangan, jadi masih bisa diurungkan dari kartu Keamanan Data — tapi backup JSON tetap pengaman yang paling andal."
         confirmLabel="Hapus semua"
       />
 
@@ -302,6 +303,200 @@ export default function PengaturanPage() {
         destructive={false}
       />
     </div>
+  );
+}
+
+/**
+ * Kartu ketahanan data.
+ *
+ * Tanpa server, kehilangan data tidak bisa dipulihkan siapa pun — dan sekali
+ * terjadi, pengguna tidak akan mempercayai aplikasi keuangan lagi. Kartu ini
+ * membuat tiga hal yang biasanya tak terlihat menjadi terlihat: apakah browser
+ * sudah berjanji tidak membuang data ini, berapa catatan yang belum ter-backup,
+ * dan apakah masih ada tindakan merusak yang bisa diurungkan.
+ */
+function DataSafetyCard({
+  transactions,
+  budgets,
+  goals,
+  bytes,
+}: {
+  transactions: number;
+  budgets: number;
+  goals: number;
+  bytes: number;
+}) {
+  const toast = useToast();
+  const [persistence, setPersistence] = useState<PersistenceState | null>(null);
+  const [usage, setUsage] = useState<StorageUsage | null>(null);
+  const [asking, setAsking] = useState(false);
+  // Dinaikkan setelah Urungkan, untuk kasus langka ketika jumlah data kembali
+  // ke angka yang sama persis dan memo di bawah tidak akan terpicu sendiri.
+  const [refresh, setRefresh] = useState(0);
+
+  // Kartu ini hanya dirender setelah store terhidrasi, jadi membaca
+  // localStorage saat render aman dan tidak pernah terjadi di server.
+  const meta: StorageMeta = useMemo(
+    () => readMeta(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sumbernya localStorage; kunci ini yang menandakan isinya berubah
+    [transactions, budgets, goals, refresh],
+  );
+  const undo: UndoSnapshot | null = useMemo(
+    () => readUndo(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- idem
+    [transactions, budgets, goals, refresh],
+  );
+
+  // Status penyimpanan hanya tersedia lewat promise, jadi ini tetap efek.
+  useEffect(() => {
+    void checkPersistence().then(setPersistence);
+    void estimateStorage().then(setUsage);
+  }, [transactions, refresh]);
+
+  const unbacked =
+    meta.lastBackupAt === null ? transactions : Math.max(0, transactions - meta.transactionsAtBackup);
+
+  const needsBackup = BACKUP_REMINDER_AFTER > 0 && unbacked >= BACKUP_REMINDER_AFTER;
+
+  return (
+    <Card className="dp-rise col-span-12 xl:col-span-6">
+      <CardHeader title="Keamanan Data" subtitle="Ketahanan penyimpanan dan cadangan" />
+      <CardBody className="space-y-4 pt-2">
+        {/* Penyimpanan permanen: satu-satunya pengaman terhadap browser yang
+            membuang data situs saat memori perangkat menipis. */}
+        <div
+          className="flex items-start gap-2.5 rounded-xl p-3"
+          style={
+            persistence === "granted"
+              ? { background: "var(--success-soft)", color: "var(--success)" }
+              : { background: "var(--warning-soft)", color: "var(--warning)" }
+          }
+        >
+          {persistence === "granted" ? (
+            <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          ) : (
+            <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold">
+              {persistence === "granted"
+                ? "Penyimpanan permanen aktif"
+                : persistence === "unsupported"
+                  ? "Browser ini tidak mendukung penyimpanan permanen"
+                  : "Penyimpanan belum permanen"}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed opacity-90">
+              {persistence === "granted"
+                ? "Browser tidak akan membuang data ini sendiri saat memori HP menipis. Hanya kamu yang bisa menghapusnya."
+                : persistence === "unsupported"
+                  ? "Ambil backup lebih sering, karena data bisa dibuang browser tanpa pemberitahuan."
+                  : "Saat memori HP menipis, browser boleh menghapus data ini tanpa bertanya. Pasang aplikasi ke layar utama, lalu aktifkan."}
+            </p>
+
+            {persistence !== "granted" ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-2.5"
+                disabled={asking || persistence === "unsupported"}
+                onClick={async () => {
+                  setAsking(true);
+                  const result = await requestPersistence();
+                  setPersistence(result);
+                  setAsking(false);
+                  if (result === "granted") toast.success("Penyimpanan permanen aktif");
+                  else
+                    toast.error(
+                      "Browser belum mengabulkan. Pasang aplikasi ke layar utama, lalu coba lagi.",
+                    );
+                }}
+              >
+                <ShieldCheck className="size-4" />
+                {asking ? "Meminta…" : "Aktifkan"}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Pengingat backup. */}
+        {needsBackup ? (
+          <p
+            className="rounded-xl px-3 py-2.5 text-[11px] font-medium leading-relaxed"
+            style={{ background: "var(--warning-soft)", color: "var(--warning)" }}
+          >
+            <strong>{unbacked} transaksi belum masuk backup.</strong> Ketuk{" "}
+            <em>Backup &amp; Kirim</em> di atas — filenya bisa langsung disimpan ke Drive atau
+            dikirim ke diri sendiri lewat WhatsApp.
+          </p>
+        ) : null}
+
+        {/* Urungkan tindakan merusak terakhir. */}
+        {undo ? (
+          <div className="rounded-xl border border-line p-3">
+            <p className="text-[11px] leading-relaxed text-ink-muted">
+              Tindakan terakhir: <strong className="text-ink">{undo.label}</strong>. Keadaan
+              sebelumnya berisi {undo.transactions} transaksi dan masih bisa dikembalikan.
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-2.5"
+              onClick={() => {
+                const ok = actions.undoLast();
+                setRefresh((n) => n + 1);
+                if (ok) toast.success("Data sebelumnya dikembalikan");
+                else toast.error("Tidak ada yang bisa diurungkan.");
+              }}
+            >
+              <Undo2 className="size-4" />
+              Urungkan
+            </Button>
+          </div>
+        ) : null}
+
+        <dl className="space-y-2.5">
+          <InfoRow label="Transaksi" value={`${transactions} catatan`} />
+          <InfoRow label="Kategori dianggarkan" value={`${budgets} kategori`} />
+          <InfoRow label="Target tabungan" value={`${goals} target`} />
+          <InfoRow label="Ukuran data" value={`${(bytes / 1024).toFixed(1)} KB`} />
+          <InfoRow
+            label="Backup terakhir"
+            value={
+              meta?.lastBackupAt
+                ? new Date(meta.lastBackupAt).toLocaleString("id-ID", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Belum pernah"
+            }
+          />
+          {usage ? (
+            <InfoRow
+              label="Kuota terpakai"
+              value={`${(usage.usedBytes / 1024 / 1024).toFixed(1)} MB dari ${(
+                usage.quotaBytes /
+                1024 /
+                1024 /
+                1024
+              ).toFixed(1)} GB`}
+            />
+          ) : null}
+          <InfoRow label="Kunci localStorage" value={STORAGE_KEY} mono />
+        </dl>
+
+        <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
+          <Info className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+          <p className="text-[11px] leading-relaxed text-ink-muted">
+            Penyimpanan permanen tidak melindungi dari <em>Hapus data situs</em> di pengaturan
+            browser, dan tidak ikut berpindah saat ganti HP. Backup berkala tetap satu-satunya
+            pemulihan yang berlaku di semua keadaan.
+          </p>
+        </div>
+      </CardBody>
+    </Card>
   );
 }
 

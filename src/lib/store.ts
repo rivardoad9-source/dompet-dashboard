@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { DEMO_DATA_ON_FIRST_RUN } from "./config";
+import { clearUndo, readUndo, requestPersistence, saveUndo } from "./durability";
 import { isUuid, newId } from "./ids";
 import { buildSeedState, emptyState } from "./seed";
 import type { AppState, Budget, Deposit, Goal, Settings, Transaction } from "./types";
@@ -127,13 +129,28 @@ export function hydrateStore() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     // Kunjungan pertama: tampilkan dataset demo supaya template langsung hidup.
-    const next = raw ? reconcile(JSON.parse(raw)) : buildSeedState();
+    // Bisa dimatikan lewat config untuk pemasangan ke pengguna sungguhan.
+    const first = DEMO_DATA_ON_FIRST_RUN ? buildSeedState() : emptyState();
+    const next = raw ? reconcile(JSON.parse(raw)) : first;
     commit(next, !raw);
   } catch {
-    commit(buildSeedState(), false);
+    // Data tersimpan rusak. Tampilkan sesuatu, tapi JANGAN menyimpan —
+    // menimpanya akan menghapus satu-satunya sisa yang mungkin masih bisa
+    // diselamatkan pengguna secara manual dari penyimpanan browser.
+    commit(DEMO_DATA_ON_FIRST_RUN ? buildSeedState() : emptyState(), false);
   }
 
   applyTheme(snapshot.state.settings.theme);
+
+  /*
+   * Minta status penyimpanan permanen begitu aplikasi hidup.
+   *
+   * Tanpa ini penyimpanan situs berstatus "best effort" dan boleh dibuang
+   * browser saat ruang perangkat menipis — mode kegagalan yang paling merusak
+   * kepercayaan, karena terjadi diam-diam dan tidak bisa dipulihkan. Sengaja
+   * tidak di-await: hasilnya tidak mengubah apa pun yang dirender sekarang.
+   */
+  void requestPersistence();
 }
 
 export function applyTheme(theme: Settings["theme"]) {
@@ -246,19 +263,44 @@ export const actions = {
     if (patch.theme) applyTheme(patch.theme);
   },
 
-  /** Dipakai Import JSON di tab Pengaturan. */
-  replaceState(next: AppState) {
+  /*
+   * Tiga tindakan di bawah menghapus catatan yang sudah ada, dan ketiganya
+   * hanya berjarak satu ketukan. Masing-masing menyimpan snapshot lebih dulu
+   * supaya salah tekan bisa diurungkan — lihat `undoLast`.
+   */
+
+  /** Dipakai Impor dan Pulihkan dari JSON di tab Pengaturan. */
+  replaceState(next: AppState, label = "Ganti seluruh data") {
+    saveUndo(snapshot.state, label);
     commit(next);
     applyTheme(next.settings.theme);
   },
 
   loadDemoData() {
+    saveUndo(snapshot.state, "Muat ulang data demo");
     const seeded = buildSeedState();
     commit({ ...seeded, settings: snapshot.state.settings });
   },
 
   clearAll() {
+    saveUndo(snapshot.state, "Hapus semua data");
     const cleared = emptyState();
     commit({ ...cleared, settings: snapshot.state.settings });
+  },
+
+  /**
+   * Mengembalikan keadaan sebelum tindakan merusak terakhir.
+   *
+   * Snapshot dibuang setelah dipakai, jadi tombolnya tidak berubah menjadi
+   * saklar bolak-balik yang justru membingungkan.
+   */
+  undoLast(): boolean {
+    const snap = readUndo();
+    if (!snap) return false;
+
+    commit({ ...snap.state, settings: snapshot.state.settings });
+    applyTheme(snapshot.state.settings.theme);
+    clearUndo();
+    return true;
   },
 };
