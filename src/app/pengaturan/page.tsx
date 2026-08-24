@@ -9,12 +9,19 @@ import {
   Moon,
   Palette,
   RotateCcw,
+  Share2,
+  Smartphone,
   Trash2,
   Upload,
   User,
 } from "lucide-react";
 import { useRef, useState } from "react";
-import { exportBackupJson, exportTransactionsCsv, readBackupFile } from "@/lib/export";
+import {
+  exportBackupJson,
+  exportTransactionsCsv,
+  readBackupFile,
+  shareBackupJson,
+} from "@/lib/export";
 import { STORAGE_KEY, actions, useStore } from "@/lib/store";
 import { PageIntro } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +36,7 @@ export default function PengaturanPage() {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [confirm, setConfirm] = useState<"clear" | "demo" | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   if (!hydrated) {
     return (
@@ -59,8 +67,126 @@ export default function PengaturanPage() {
       <PageIntro title="Pengaturan" description="Profil, tampilan, dan data" />
 
       <div className="grid grid-cols-12 gap-4 lg:gap-5">
+        {/* --- Data ---
+             Sengaja paling atas: tanpa akun dan tanpa server, backup adalah
+             satu-satunya pengaman data pengguna, jadi inilah yang harus terlihat
+             lebih dulu saat halaman ini dibuka dari HP.
+             Urutannya diatur lewat DOM, bukan CSS order, supaya urutan fokus
+             keyboard dan pembaca layar sama persis dengan yang terlihat mata. */}
+        <Card className="dp-rise col-span-12 xl:col-span-7">
+          <CardHeader
+            title="Data & Backup"
+            subtitle="Pindah HP, simpan cadangan, atau ekspor ke spreadsheet"
+          />
+          <CardBody className="space-y-4 pt-2">
+            {/* Dua aksi utama, dibedakan dari yang lain karena inilah jalur
+                pindah perangkat. */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                size="lg"
+                className="justify-start"
+                disabled={sharing}
+                onClick={async () => {
+                  setSharing(true);
+                  const outcome = await shareBackupJson(state);
+                  setSharing(false);
+                  if (outcome === "shared") toast.success("Backup dikirim");
+                  else if (outcome === "downloaded") toast.success("Backup JSON diunduh");
+                }}
+              >
+                <Share2 className="size-4" />
+                {sharing ? "Menyiapkan…" : "Backup & Kirim"}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="lg"
+                className="justify-start"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="size-4" />
+                Pulihkan dari JSON
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void onImport(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
+              <Smartphone className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+              <p className="text-[11px] leading-relaxed text-ink-muted">
+                <strong className="font-bold text-ink">Ganti HP?</strong> Ketuk{" "}
+                <em>Backup &amp; Kirim</em> di HP lama — filenya bisa langsung dikirim ke WhatsApp,
+                email, atau Drive. Buka aplikasi di HP baru, ketuk{" "}
+                <em>Pulihkan dari JSON</em>, pilih file itu. Selesai.
+              </p>
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                Lainnya
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="secondary"
+                  className="justify-start"
+                  onClick={() => {
+                    if (!transactions.length) {
+                      toast.error("Belum ada transaksi untuk diekspor.");
+                      return;
+                    }
+                    const count = exportTransactionsCsv(transactions);
+                    toast.success(`${count} transaksi diekspor ke CSV`);
+                  }}
+                >
+                  <Download className="size-4" />
+                  Ekspor CSV / Excel
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  className="justify-start"
+                  onClick={() => {
+                    exportBackupJson(state);
+                    toast.success("Backup JSON diunduh");
+                  }}
+                >
+                  <FileJson className="size-4" />
+                  Unduh backup saja
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  className="justify-start"
+                  onClick={() => setConfirm("demo")}
+                >
+                  <RotateCcw className="size-4" />
+                  Muat ulang data demo
+                </Button>
+
+                <Button
+                  variant="danger"
+                  className="justify-start"
+                  onClick={() => setConfirm("clear")}
+                >
+                  <Trash2 className="size-4" />
+                  Hapus semua data
+                </Button>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
         {/* --- Profil --- */}
-        <Card className="dp-rise col-span-12 xl:col-span-6">
+        <Card className="dp-rise col-span-12 xl:col-span-5">
           <CardHeader title="Profil" subtitle="Nama yang muncul di sapaan beranda" />
           <CardBody className="space-y-4 pt-2">
             <Field label="Nama panggilan" htmlFor="nama">
@@ -120,78 +246,8 @@ export default function PengaturanPage() {
           </CardBody>
         </Card>
 
-        {/* --- Data --- */}
-        <Card className="dp-rise col-span-12 xl:col-span-7">
-          <CardHeader title="Data & Backup" subtitle="Ekspor, pulihkan, atau reset" />
-          <CardBody className="space-y-3 pt-2">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button
-                variant="secondary"
-                className="justify-start"
-                onClick={() => {
-                  if (!transactions.length) {
-                    toast.error("Belum ada transaksi untuk diekspor.");
-                    return;
-                  }
-                  const count = exportTransactionsCsv(transactions);
-                  toast.success(`${count} transaksi diekspor ke CSV`);
-                }}
-              >
-                <Download className="size-4" />
-                Ekspor CSV / Excel
-              </Button>
-
-              <Button
-                variant="secondary"
-                className="justify-start"
-                onClick={() => {
-                  exportBackupJson(state);
-                  toast.success("Backup JSON diunduh");
-                }}
-              >
-                <FileJson className="size-4" />
-                Backup JSON
-              </Button>
-
-              <Button
-                variant="secondary"
-                className="justify-start"
-                onClick={() => fileRef.current?.click()}
-              >
-                <Upload className="size-4" />
-                Pulihkan dari JSON
-              </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="application/json,.json"
-                className="sr-only"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void onImport(file);
-                  e.target.value = "";
-                }}
-              />
-
-              <Button
-                variant="secondary"
-                className="justify-start"
-                onClick={() => setConfirm("demo")}
-              >
-                <RotateCcw className="size-4" />
-                Muat ulang data demo
-              </Button>
-            </div>
-
-            <Button variant="danger" className="w-full justify-start" onClick={() => setConfirm("clear")}>
-              <Trash2 className="size-4" />
-              Hapus semua data
-            </Button>
-          </CardBody>
-        </Card>
-
         {/* --- Info --- */}
-        <Card className="dp-rise col-span-12 xl:col-span-5">
+        <Card className="dp-rise col-span-12 xl:col-span-6">
           <CardHeader title="Penyimpanan" subtitle="Ringkasan isi database lokal" />
           <CardBody className="pt-2">
             <dl className="space-y-2.5">
