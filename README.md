@@ -57,11 +57,16 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 | **JSON** | Backup penuh untuk pindah perangkat |
 
 **Impor dari aplikasi lain**
+- **Excel (.xlsx) dibaca langsung** — tanpa dikonversi ke CSV dulu. Pembaca ZIP + XML sendiri, nol dependency; tanggal serial Excel dan tabel shared string ditangani
 - Baca CSV/TSV dari pencatat keuangan mana pun — pemisah koma, titik koma, atau tab
-- Nominal `Rp 25.000`, `25,000.00`, `25.000,50`, dan `(25.000)` semuanya terbaca
-- Tanggal `DD/MM/YYYY`, `MM/DD/YYYY`, ISO, dan `24 Agustus 2026`
+- Nominal `Rp 25.000`, `25,000.00`, `25.000,50`, `(25.000)`, dan `40000.0` semuanya terbaca
+- Tanggal `DD/MM/YYYY`, `MM/DD/YYYY`, ISO, `24 Agustus 2026`, dan serial Excel
+- Kategori ber-emoji seperti `🍔 Food` atau `💄 Beauty` dicocokkan ke kategori bawaan, dengan padanan yang sadar arah uang — *Gift* sebagai pengeluaran jadi Belanja, sebagai pemasukan jadi Hadiah
+- Kolom `Income/Expense` dikenali sebagai kolom tipe, bukan kolom nominal
 - Arah uang disimpulkan dari kolom tipe, tanda plus/minus, atau nama kategori
 - Kolom ditebak otomatis, **ditampilkan untuk dikoreksi**, lengkap dengan pratinjau sebelum apa pun tersimpan
+
+Ekspor dari **Money Manager**, **Wallet**, dan sejenisnya bisa langsung dipilih apa adanya.
 
 **Impor rekening koran PDF** — tanpa dependency PDF apa pun
 - Teks diambil langsung dari PDF memakai `DecompressionStream` bawaan browser, termasuk font ter-*subset* lewat tabel `/ToUnicode`
@@ -167,6 +172,7 @@ src/
         ├── xlsx.ts           Pembuat file Excel asli
         ├── recap.ts          Kartu rekap PNG di canvas
         ├── csv-import.ts     Parser impor dari aplikasi lain
+        ├── xlsx-import.ts    Pembaca .xlsx (ZIP + XML, tanpa dependency)
         └── pdf-import.ts     Pembaca rekening koran PDF
 ```
 

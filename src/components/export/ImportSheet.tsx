@@ -14,6 +14,7 @@ import {
   type ParsedSheet,
 } from "@/lib/formats/csv-import";
 import { parsePdfStatement } from "@/lib/formats/pdf-import";
+import { parseXlsx } from "@/lib/formats/xlsx-import";
 import { actions, readState } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
 import { Field, Select } from "@/components/ui/Field";
@@ -111,6 +112,20 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
         return;
       }
 
+      // Excel dari aplikasi lain (Money Manager, Wallet, dsb).
+      if (/\.xlsx$/i.test(file.name)) {
+        const result = await parseXlsx(await file.arrayBuffer());
+        if (!result.ok) {
+          toast.error(result.message);
+          setFilename("");
+          return;
+        }
+
+        setSheet(result.sheet);
+        setMapping(guessMapping(result.sheet));
+        return;
+      }
+
       const text = await file.text();
       const parsed = parseDelimited(text);
 
@@ -157,7 +172,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       description={
         sheet
           ? `${filename} · ${sheet.rows.length} baris terbaca${pdf ? ` dari ${pdf.pages} halaman` : ""}`
-          : "Rekening koran PDF, CSV dari aplikasi lain, atau backup Dompet"
+          : "Excel/CSV dari aplikasi lain, rekening koran PDF, atau backup Dompet"
       }
       size={sheet ? "lg" : "md"}
       footer={
@@ -197,9 +212,9 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
               {busy ? "Membaca…" : "Pilih file"}
             </span>
             <span className="text-center text-[11px] leading-relaxed text-ink-muted">
-              Rekening koran <strong className="text-ink-muted">PDF</strong> dari bank, file
-              CSV/TSV/TXT dari aplikasi pencatat keuangan lain — juga file backup .json dari
-              Dompet.
+              <strong className="text-ink-muted">Excel (.xlsx)</strong> atau CSV dari aplikasi
+              pencatat keuangan lain, rekening koran <strong className="text-ink-muted">PDF</strong>{" "}
+              dari bank — juga file backup .json dari Dompet.
             </span>
           </button>
 
@@ -215,9 +230,10 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
           <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-3">
             <Table2 className="mt-0.5 size-4 shrink-0 text-ink-faint" />
             <p className="text-[11px] leading-relaxed text-ink-muted">
-              Kalau aplikasi lamamu hanya bisa mengekspor Excel, buka filenya lalu{" "}
-              <em>Save As → CSV</em> dulu. Pemisah koma, titik koma, maupun tab sama-sama
-              terbaca, begitu juga nominal seperti <em>Rp 25.000</em> atau <em>(25,000.00)</em>.
+              Ekspor dari <em>Money Manager</em>, <em>Wallet</em>, dan sejenisnya bisa langsung
+              dipilih tanpa dikonversi dulu. Kategori ber-emoji seperti <em>🍔 Food</em>, kolom{" "}
+              <em>Income/Expense</em>, dan nominal seperti <em>Rp 25.000</em> atau{" "}
+              <em>40000.0</em> semuanya sudah dikenali.
             </p>
           </div>
         </div>
@@ -396,7 +412,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       <input
         ref={fileRef}
         type="file"
-        accept=".pdf,.csv,.tsv,.txt,.json,application/pdf,text/csv,text/plain,application/json"
+        accept=".xlsx,.pdf,.csv,.tsv,.txt,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,text/csv,text/plain,application/json"
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];

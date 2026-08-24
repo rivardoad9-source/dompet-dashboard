@@ -137,8 +137,11 @@ export function parseAmount(raw: string): number | null {
     const idx = lastDot >= 0 ? lastDot : lastComma;
     const tail = s.length - idx - 1;
     const occurrences = s.split(sep).length - 1;
-    // Satu pemisah dengan tepat 2 digit di belakangnya = desimal.
-    normalized = occurrences === 1 && tail === 2 ? s.replace(sep, ".") : s.split(sep).join("");
+    // Pemisah ribuan selalu mengelompokkan tepat tiga digit. Jadi satu pemisah
+    // yang diikuti selain tiga digit pasti pemisah desimal — "40000.0" adalah
+    // empat puluh ribu, bukan empat ratus ribu. Aplikasi seperti Money Manager
+    // mengekspor persis dengan satu angka di belakang koma.
+    normalized = occurrences === 1 && tail !== 3 ? s.replace(sep, ".") : s.split(sep).join("");
   } else {
     normalized = s;
   }
@@ -265,26 +268,61 @@ const HINTS = {
   amount: ["nominal", "jumlah", "amount", "nilai", "value", "total", "debit", "keluar", "pengeluaran", "expense", "harga"],
   amountIn: ["kredit", "credit", "masuk", "pemasukan", "income", "deposit"],
   category: ["kategori", "category", "kategory", "jenis", "pos", "akun", "account", "label", "tag"],
-  note: ["catatan", "keterangan", "uraian", "deskripsi", "description", "note", "notes", "memo", "detail", "judul", "title", "nama", "merchant", "payee", "item", "transaksi"],
+  // "note"/"catatan" didahulukan atas "description": aplikasi yang punya kedua
+  // kolom itu (Money Manager, misalnya) menaruh teks aslinya di Note dan
+  // membiarkan Description kosong.
+  note: ["catatan", "note", "notes", "keterangan", "uraian", "deskripsi", "description", "memo", "detail", "judul", "title", "nama", "merchant", "payee", "item", "transaksi"],
   type: ["tipe", "type", "arah", "jenis transaksi", "transaction type", "in/out", "dc"],
 };
 
+/**
+ * Seberapa yakin judul ini adalah kolom yang dicari.
+ *
+ * Cocok persis mengalahkan cocok sebagian, dan petunjuk yang lebih awal di
+ * daftar mengalahkan yang belakangan. Peringkat itu penting: ekspor Money
+ * Manager punya kolom "Category" DAN "Account", keduanya cocok persis dengan
+ * daftar petunjuk kategori. Tanpa peringkat, yang menang cuma yang kebetulan
+ * lebih kiri — dan kategori terbaca dari kolom yang salah.
+ */
 function scoreHeader(header: string, hints: string[]): number {
   const h = header.toLowerCase().trim();
   if (!h) return 0;
-  for (const hint of hints) {
-    if (h === hint) return 100;
-    if (h.includes(hint)) return 60;
-  }
-  return 0;
+
+  let best = 0;
+  hints.forEach((hint, rank) => {
+    const score = h === hint ? 100 - rank : h.includes(hint) ? 60 - rank : 0;
+    if (score > best) best = score;
+  });
+  return best;
+}
+
+const TYPE_IN_WORDS = ["income", "credit", "kredit", "masuk", "pemasukan"];
+const TYPE_OUT_WORDS = ["expense", "debit", "debet", "keluar", "pengeluaran"];
+
+/**
+ * Judul yang menyebut KEDUA arah sekaligus — "Income/Expense", "Debit/Kredit",
+ * "Pemasukan/Pengeluaran" — adalah kolom tipe, bukan kolom nominal.
+ *
+ * Tanpa pengecualian ini "Income/Expense" tersangkut sebagai kolom pemasukan
+ * karena memuat kata "income", lalu seluruh arah uang terbaca terbalik dan
+ * kolom tipe yang sebenarnya tidak pernah ditemukan.
+ */
+function findTypeHeader(headers: string[]): number {
+  return headers.findIndex((h) => {
+    const s = h.toLowerCase().trim();
+    if (!s) return false;
+    return TYPE_IN_WORDS.some((w) => s.includes(w)) && TYPE_OUT_WORDS.some((w) => s.includes(w));
+  });
 }
 
 export function guessMapping(sheet: ParsedSheet): ColumnMapping {
+  const forcedType = findTypeHeader(sheet.headers);
+
   const pick = (hints: string[], exclude: number[] = []): number => {
     let best = -1;
     let bestScore = 0;
     sheet.headers.forEach((h, i) => {
-      if (exclude.includes(i)) return;
+      if (i === forcedType || exclude.includes(i)) return;
       const s = scoreHeader(h, hints);
       if (s > bestScore) {
         bestScore = s;
@@ -297,7 +335,7 @@ export function guessMapping(sheet: ParsedSheet): ColumnMapping {
   const date = pick(HINTS.date);
   const amountIn = pick(HINTS.amountIn, [date]);
   const amount = pick(HINTS.amount, [date, amountIn]);
-  const type = pick(HINTS.type, [date, amount, amountIn]);
+  const type = forcedType >= 0 ? forcedType : pick(HINTS.type, [date, amount, amountIn]);
   const category = pick(HINTS.category, [date, amount, amountIn, type]);
   const note = pick(HINTS.note, [date, amount, amountIn, type, category]);
 
@@ -319,36 +357,88 @@ function typeFromWord(raw: string): TxType | null {
   return null;
 }
 
+/**
+ * Membersihkan teks kategori dari emoji dan tanda baca.
+ *
+ * Banyak aplikasi menulis kategorinya sebagai "🍔 Food" atau "💄 Beauty".
+ * Emoji-nya bagian dari nilai sel, bukan hiasan tampilan — tanpa dibuang, tidak
+ * satu pun cocok dan seluruh transaksi jatuh ke "Lainnya".
+ */
+function normalizeCategory(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9\s&/-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Padanan kategori dari aplikasi lain, dipisah per arah uang.
+ *
+ * Dipisah karena kata yang sama bisa berarti dua hal: "Gift" sebagai
+ * pengeluaran adalah membeli kado (belanja), sebagai pemasukan adalah menerima
+ * hadiah. Satu tabel gabungan tidak bisa membedakannya.
+ */
+const CATEGORY_ALIASES: Record<TxType, Record<string, string>> = {
+  out: {
+    food: "makanan", "food & drink": "makanan", "food drink": "makanan", makan: "makanan",
+    groceries: "makanan", grocery: "makanan", meal: "makanan", dining: "makanan",
+    cafe: "makanan", snack: "makanan",
+    transport: "transport", transportation: "transport", travel: "transport",
+    bensin: "transport", fuel: "transport", parkir: "transport", vehicle: "transport",
+    bill: "tagihan", bills: "tagihan", utilities: "tagihan", utility: "tagihan",
+    listrik: "tagihan", internet: "tagihan", pulsa: "tagihan", rent: "tagihan",
+    entertainment: "hiburan", fun: "hiburan", "social life": "hiburan", social: "hiburan",
+    culture: "hiburan", hobby: "hiburan",
+    shopping: "belanja", clothes: "belanja", clothing: "belanja", apparel: "belanja",
+    household: "belanja", beauty: "belanja", gift: "belanja", gifts: "belanja",
+    health: "kesehatan", medical: "kesehatan", medicine: "kesehatan",
+    education: "pendidikan", school: "pendidikan", book: "pendidikan", books: "pendidikan",
+    other: "lainnya", others: "lainnya", investment: "lainnya", saving: "lainnya",
+    savings: "lainnya", "petty cash": "lainnya", tax: "lainnya", insurance: "lainnya",
+  },
+  in: {
+    salary: "gaji", wage: "gaji", wages: "gaji", payroll: "gaji", allowance: "gaji",
+    income: "gaji", uang: "gaji",
+    freelance: "freelance", "side job": "freelance", project: "freelance",
+    bonus: "bonus", thr: "bonus", commission: "bonus", komisi: "bonus",
+    gift: "hadiah", gifts: "hadiah", hadiah: "hadiah", refund: "hadiah",
+    other: "lain-masuk", others: "lain-masuk", investment: "lain-masuk",
+    "petty cash": "lain-masuk", cash: "lain-masuk",
+  },
+};
+
 /** Mencocokkan nama kategori bebas ke kategori bawaan aplikasi. */
 export function matchCategory(raw: string, type: TxType): string {
-  const s = raw.toLowerCase().trim();
+  const s = normalizeCategory(raw);
   const pool = type === "in" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const fallback = type === "in" ? "lain-masuk" : "lainnya";
 
-  if (s) {
-    for (const c of pool) {
-      if (c.label.toLowerCase() === s || c.id === s) return c.id;
-    }
-    for (const c of pool) {
-      const first = c.label.toLowerCase().split(" ")[0];
-      if (s.includes(first) || first.includes(s)) return c.id;
-    }
-    // Beberapa padanan yang sering muncul di aplikasi lain.
-    const aliases: Record<string, string> = {
-      food: "makanan", makan: "makanan", "food & drink": "makanan", groceries: "makanan",
-      transport: "transport", transportation: "transport", travel: "transport", bensin: "transport",
-      bill: "tagihan", bills: "tagihan", utilities: "tagihan", listrik: "tagihan", internet: "tagihan",
-      entertainment: "hiburan", fun: "hiburan",
-      shopping: "belanja", clothes: "belanja",
-      health: "kesehatan", medical: "kesehatan",
-      education: "pendidikan", school: "pendidikan",
-      salary: "gaji", wage: "gaji",
-      bonus: "bonus", gift: "hadiah",
-    };
-    const alias = aliases[s];
-    if (alias && pool.some((c) => c.id === alias)) return alias;
+  if (!s) return fallback;
+
+  for (const c of pool) {
+    if (normalizeCategory(c.label) === s || c.id === s) return c.id;
   }
 
-  return type === "in" ? "lain-masuk" : "lainnya";
+  const aliases = CATEGORY_ALIASES[type];
+  const exact = aliases[s];
+  if (exact && pool.some((c) => c.id === exact)) return exact;
+
+  for (const c of pool) {
+    const first = normalizeCategory(c.label).split(" ")[0];
+    if (s.includes(first) || first.includes(s)) return c.id;
+  }
+
+  // Terakhir: padanan yang muncul sebagai salah satu kata, mis. "Food & Drink"
+  // atau "Transport (Umum)". Dicek belakangan supaya kata utuh menang duluan.
+  for (const [key, id] of Object.entries(aliases)) {
+    if (!pool.some((c) => c.id === id)) continue;
+    if (new RegExp(`(^|\\s)${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|\\s)`).test(s)) {
+      return id;
+    }
+  }
+
+  return fallback;
 }
 
 /* ==========================================================================
@@ -384,13 +474,13 @@ function signIsMeaningful(values: string[]): boolean {
 
 /** Apakah teks kategori ini merujuk salah satu kategori pemasukan bawaan? */
 function looksLikeIncomeCategory(raw: string): boolean {
-  const s = raw.toLowerCase().trim();
+  const s = normalizeCategory(raw);
   if (!s) return false;
 
   const incomeWords = ["gaji", "salary", "wage", "bonus", "thr", "freelance", "hadiah", "gift", "pemasukan", "income", "pendapatan", "refund"];
   if (incomeWords.some((w) => s.includes(w))) return true;
 
-  return INCOME_CATEGORIES.some((c) => c.label.toLowerCase() === s || c.id === s);
+  return INCOME_CATEGORIES.some((c) => normalizeCategory(c.label) === s || c.id === s);
 }
 
 export function buildTransactions(sheet: ParsedSheet, mapping: ColumnMapping): ImportPreview {
