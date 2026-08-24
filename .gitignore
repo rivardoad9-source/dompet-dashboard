@@ -30,8 +30,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — never commit real credentials.
+# Listed explicitly (not just `.env*`) so the intent survives future edits.
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+# Catch-all for anything not named above (.env.staging, .env.backup, …)
 .env*
+# …except the committed template, which must stay empty.
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +49,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Konfigurasi lokal Claude Code (bukan bagian produk)
+.claude/
