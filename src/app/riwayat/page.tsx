@@ -6,17 +6,16 @@ import { Suspense, useMemo, useState } from "react";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { formatCompact, monthLabel } from "@/lib/format";
 import { useCurrentMonth } from "@/lib/hooks";
-import { exportTransactionsCsv } from "@/lib/export";
 import { useStore } from "@/lib/store";
 import type { TxType } from "@/lib/types";
 import { PageIntro } from "@/components/shell/AppShell";
+import { ExportSheet } from "@/components/export/ExportSheet";
 import { GroupedTransactionList } from "@/components/transaction/TransactionList";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Feedback";
 import { ChipRow, Segmented } from "@/components/ui/Segmented";
 import { MonthPicker } from "@/components/ui/MonthPicker";
-import { useToast } from "@/components/ui/Toast";
 
 type TypeFilter = "all" | TxType;
 
@@ -31,13 +30,13 @@ export default function RiwayatPage() {
 function HistoryView() {
   const params = useSearchParams();
   const { state, hydrated } = useStore();
-  const toast = useToast();
 
   const [query, setQuery] = useState(() => params.get("q") ?? "");
   const [key, setKey] = useCurrentMonth();
   const [allMonths, setAllMonths] = useState(false);
   const [type, setType] = useState<TypeFilter>("all");
   const [category, setCategory] = useState<string>("all");
+  const [exporting, setExporting] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -82,15 +81,6 @@ function HistoryView() {
     setAllMonths(false);
   }
 
-  function exportCsv() {
-    if (!filtered.length) {
-      toast.error("Tidak ada transaksi untuk diekspor.");
-      return;
-    }
-    const count = exportTransactionsCsv(filtered);
-    toast.success(`${count} transaksi diekspor ke CSV`);
-  }
-
   return (
     <div className="space-y-4 lg:space-y-5">
       <PageIntro title="Riwayat" description="Cari, filter, dan ekspor transaksi" />
@@ -110,9 +100,9 @@ function HistoryView() {
                 className="h-11 w-full rounded-xl border border-line bg-surface-2 pl-10 pr-3 text-sm text-ink placeholder:text-ink-faint transition-colors duration-200 hover:border-line-strong focus:border-brand focus:bg-surface focus:outline-none"
               />
             </div>
-            <Button variant="secondary" onClick={exportCsv} className="shrink-0">
+            <Button variant="secondary" onClick={() => setExporting(true)} className="shrink-0">
               <Download className="size-4" />
-              <span className="hidden sm:inline">Ekspor CSV</span>
+              <span className="hidden sm:inline">Ekspor</span>
             </Button>
           </div>
 
@@ -195,6 +185,15 @@ function HistoryView() {
           <GroupedTransactionList transactions={filtered} privacy={privacy} />
         </CardBody>
       </Card>
+
+      {/* Filter yang sedang aktif ikut terbawa ke hasil ekspor. */}
+      <ExportSheet
+        open={exporting}
+        onClose={() => setExporting(false)}
+        transactions={filtered}
+        monthKey={key}
+        scopeLabel={allMonths ? "Semua bulan" : monthLabel(key)}
+      />
     </div>
   );
 }

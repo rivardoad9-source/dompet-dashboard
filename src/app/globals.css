@@ -354,3 +354,67 @@ body {
 .recharts-surface:focus {
   outline: none;
 }
+
+/* ==========================================================================
+   Cetak / Simpan sebagai PDF
+   ==========================================================================
+   Tidak ada pustaka PDF di template ini. Mesin cetak browser sudah menghasilkan
+   PDF yang rapi dan bisa dipilih teksnya, gratis, dan di ponsel muncul lewat
+   share sheet sebagai "Save as PDF" atau "Print".
+
+   Yang dicetak bukan tampilan aplikasi, melainkan tata letak laporan tersendiri
+   (`.dp-print-only`) — tanpa navigasi, tanpa tombol, tanpa grafik interaktif.
+   ========================================================================== */
+
+.dp-print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  /* Cetak hitam-putih di atas putih: hemat tinta dan selalu terbaca,
+     apa pun tema yang sedang aktif. */
+  :root,
+  [data-theme="midnight"] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #eeeeee;
+    --ink: #000000;
+    --ink-muted: #333333;
+    --ink-faint: #666666;
+    --line: #cccccc;
+    --line-strong: #999999;
+    --brand: #000000;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .dp-no-print {
+    display: none !important;
+  }
+
+  .dp-print-only {
+    display: block !important;
+  }
+
+  /* Jangan pernah memotong satu baris transaksi di tengah pergantian halaman. */
+  .dp-print-row {
+    break-inside: avoid;
+  }
+
+  .dp-print-head {
+    display: table-header-group;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

@@ -40,12 +40,28 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 - Filter bulan, tipe (masuk/keluar), kategori, dan pencarian teks
 - Transaksi dikelompokkan per hari dengan total harian
 - Edit dan hapus (dengan **Urungkan**)
-- Ekspor **CSV/Excel** sesuai filter yang aktif
+- Ekspor dalam **lima format** sesuai filter yang aktif — lihat di bawah
 
 **Pengaturan**
 - Nama panggilan, tema, dan mode sembunyikan nominal
-- Backup & pulihkan JSON, muat ulang data demo, hapus semua data
-- Ringkasan isi database lokal
+- **Backup & Kirim** lewat share sheet — backup langsung ke WhatsApp, email, atau Drive
+- Muat ulang data demo, hapus semua data, ringkasan isi database lokal
+
+**Ekspor lima format** — semuanya tanpa dependency tambahan
+| Format | Kegunaan |
+|---|---|
+| **PDF** | Laporan cetak lewat mesin cetak browser: kop, ringkasan, rekap anggaran, rincian transaksi |
+| **Excel (.xlsx)** | File xlsx asli — nominal sebagai angka, tanggal sebagai tanggal, baris judul dibekukan |
+| **Gambar (PNG)** | Kartu rekap bulanan 1080×1350 yang digambar di canvas, dirancang untuk dibagikan |
+| **CSV** | Format polos untuk aplikasi lain |
+| **JSON** | Backup penuh untuk pindah perangkat |
+
+**Impor dari aplikasi lain**
+- Baca CSV/TSV dari pencatat keuangan mana pun — pemisah koma, titik koma, atau tab
+- Nominal `Rp 25.000`, `25,000.00`, `25.000,50`, dan `(25.000)` semuanya terbaca
+- Tanggal `DD/MM/YYYY`, `MM/DD/YYYY`, ISO, dan `24 Agustus 2026`
+- Arah uang disimpulkan dari kolom tipe, tanda plus/minus, atau nama kategori
+- Kolom ditebak otomatis, **ditampilkan untuk dikoreksi**, lengkap dengan pratinjau sebelum apa pun tersimpan
 
 **Lain-lain**
 - PWA: manifest, service worker offline, ikon maskable, shortcut aplikasi
@@ -125,7 +141,8 @@ src/
 │   ├── home/                 Kartu-kartu beranda
 │   ├── budget/               Editor plafon
 │   ├── savings/              Kartu target + sheet setoran/riwayat
-│   └── transaction/          Bottom sheet catat/edit transaksi + daftar
+│   ├── transaction/          Bottom sheet catat/edit transaksi + daftar
+│   └── export/               Lembar ekspor, wizard impor, tata letak cetak
 │
 └── lib/
     ├── types.ts              Tipe domain
@@ -134,9 +151,14 @@ src/
     ├── stats.ts              Semua perhitungan turunan (murni, mudah diuji)
     ├── store.ts              State + persistensi localStorage
     ├── seed.ts               Data demo
-    ├── export.ts             Ekspor CSV & backup JSON
+    ├── export.ts             Penyaluran berkas (share sheet + unduhan), CSV, JSON
     ├── hooks.ts              Hook bulan berjalan, reduced-motion, mounted
-    └── nav.ts                Konfigurasi navigasi
+    ├── nav.ts                Konfigurasi navigasi
+    └── formats/
+        ├── zip.ts            Penulis ZIP minimal (dasar .xlsx)
+        ├── xlsx.ts           Pembuat file Excel asli
+        ├── recap.ts          Kartu rekap PNG di canvas
+        └── csv-import.ts     Parser impor dari aplikasi lain
 ```
 
 Aturan yang dipegang di seluruh kode: **komponen tidak pernah menulis warna mentah.** Semuanya membaca CSS custom property, sehingga mengganti brand cukup di satu blok.

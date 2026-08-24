@@ -16,14 +16,12 @@ import {
   User,
 } from "lucide-react";
 import { useRef, useState } from "react";
-import {
-  exportBackupJson,
-  exportTransactionsCsv,
-  readBackupFile,
-  shareBackupJson,
-} from "@/lib/export";
+import { exportBackupJson, readBackupFile, shareBackupJson } from "@/lib/export";
+import { monthKey } from "@/lib/format";
 import { STORAGE_KEY, actions, useStore } from "@/lib/store";
 import { PageIntro } from "@/components/shell/AppShell";
+import { ExportSheet } from "@/components/export/ExportSheet";
+import { ImportSheet } from "@/components/export/ImportSheet";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { ConfirmDialog, Skeleton } from "@/components/ui/Feedback";
@@ -37,6 +35,8 @@ export default function PengaturanPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [confirm, setConfirm] = useState<"clear" | "demo" | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   if (!hydrated) {
     return (
@@ -102,10 +102,10 @@ export default function PengaturanPage() {
                 variant="secondary"
                 size="lg"
                 className="justify-start"
-                onClick={() => fileRef.current?.click()}
+                onClick={() => setImporting(true)}
               >
                 <Upload className="size-4" />
-                Pulihkan dari JSON
+                Impor Data
               </Button>
               <input
                 ref={fileRef}
@@ -138,17 +138,10 @@ export default function PengaturanPage() {
                 <Button
                   variant="secondary"
                   className="justify-start"
-                  onClick={() => {
-                    if (!transactions.length) {
-                      toast.error("Belum ada transaksi untuk diekspor.");
-                      return;
-                    }
-                    const count = exportTransactionsCsv(transactions);
-                    toast.success(`${count} transaksi diekspor ke CSV`);
-                  }}
+                  onClick={() => setExporting(true)}
                 >
                   <Download className="size-4" />
-                  Ekspor CSV / Excel
+                  Ekspor: PDF, Excel, gambar…
                 </Button>
 
                 <Button
@@ -273,6 +266,16 @@ export default function PengaturanPage() {
         <Database className="size-3.5" />
         Dompet v1.1.0 · Personal Finance Dashboard · Data lokal, tanpa server
       </p>
+
+      <ImportSheet open={importing} onClose={() => setImporting(false)} />
+
+      <ExportSheet
+        open={exporting}
+        onClose={() => setExporting(false)}
+        transactions={transactions}
+        monthKey={monthKey(new Date())}
+        scopeLabel="Seluruh data"
+      />
 
       <ConfirmDialog
         open={confirm === "clear"}
