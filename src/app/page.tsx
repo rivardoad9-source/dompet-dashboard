@@ -56,7 +56,7 @@ export default function BerandaPage() {
 
   if (!hydrated) return <HomeSkeleton />;
 
-  const { privacy } = state.settings;
+  const { privacy, heroMetric } = state.settings;
 
   return (
     <div className="space-y-4 lg:space-y-5">
@@ -74,6 +74,8 @@ export default function BerandaPage() {
             balance={data.balance}
             saved={data.saved}
             totals={data.totals}
+            summary={data.summary}
+            metric={heroMetric}
             monthKey={key}
             privacy={privacy}
           />

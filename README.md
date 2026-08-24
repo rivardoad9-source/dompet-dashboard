@@ -17,6 +17,7 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 
 **Beranda**
 - Header saldo likuid, pemasukan, dan pengeluaran bulan berjalan
+- **Angka utama bisa diganti** — ketuk labelnya untuk memilih Saldo likuid, Keluar, Masuk, Sisa (masuk−keluar), atau Sisa anggaran. Dua angka pendamping ikut menyesuaikan supaya tidak ada nominal yang tampil dua kali dalam satu kartu; pilihannya tersimpan
 - **Ring Anggaran vs Realisasi** — donut SVG interaktif; tiap segmen adalah satu kategori, arahkan kursor (atau fokus keyboard) untuk melihat rinciannya di tengah ring
 - Indikator warna dinamis: hijau `<70%`, kuning `70–90%`, merah `>90%`
 - Empat kartu metrik: realisasi, plafon, sisa aman, dan jatah harian
@@ -169,6 +170,7 @@ src/
 └── lib/
     ├── types.ts              Tipe domain
     ├── categories.ts         ⭐ Daftar kategori — tambah kategori di sini
+    ├── hero-metrics.ts       ⭐ Pilihan angka utama di kartu Beranda
     ├── format.ts             Format rupiah, tanggal, ambang status anggaran
     ├── stats.ts              Semua perhitungan turunan (murni, mudah diuji)
     ├── store.ts              State + persistensi localStorage
