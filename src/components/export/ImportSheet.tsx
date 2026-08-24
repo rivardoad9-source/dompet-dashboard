@@ -46,6 +46,40 @@ interface PdfNotice {
   pages: number;
 }
 
+type FileKind = "json" | "pdf" | "xlsx" | "delimited";
+
+/**
+ * Menentukan jenis berkas dari isinya, bukan dari namanya.
+ *
+ * Nama berkas bukan sumber yang bisa dipercaya di ponsel: sebagian file
+ * manager Android menyerahkan berkas tanpa ekstensi, atau dengan nama hasil
+ * salinan seperti "document(1)". Tiga byte pertama sudah cukup memastikan —
+ * "PK" untuk .xlsx (arsip zip), "%PDF" untuk PDF, "{" untuk backup Dompet.
+ * Sisanya diperlakukan sebagai teks berpemisah, yang juga merupakan tebakan
+ * paling aman kalau ternyata bukan apa-apa.
+ */
+async function detectKind(file: File): Promise<FileKind> {
+  try {
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+
+    if (head[0] === 0x50 && head[1] === 0x4b) return "xlsx"; // "PK"
+    if (head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46) return "pdf";
+
+    // Lewati spasi/BOM di depan sebelum menyimpulkan JSON.
+    for (const byte of head) {
+      if (byte === 0x7b) return "json"; // "{"
+      if (byte > 0x20 && byte !== 0xef && byte !== 0xbb && byte !== 0xbf) break;
+    }
+  } catch {
+    // Tidak bisa mengintip isinya — jatuh kembali ke ekstensi di bawah.
+  }
+
+  if (/\.json$/i.test(file.name)) return "json";
+  if (/\.pdf$/i.test(file.name)) return "pdf";
+  if (/\.xlsx$/i.test(file.name)) return "xlsx";
+  return "delimited";
+}
+
 export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -80,8 +114,10 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
     setFilename(file.name);
 
     try {
+      const kind = await detectKind(file);
+
       // Backup Dompet sendiri: pulihkan utuh, tidak perlu pemetaan kolom.
-      if (/\.json$/i.test(file.name)) {
+      if (kind === "json") {
         const result = await readBackupFile(file);
         if (!result.ok || !result.state) {
           toast.error(result.error ?? "Gagal membaca file.");
@@ -94,7 +130,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       }
 
       // Rekening koran PDF: ubah dulu jadi tabel, sisanya alur yang sama.
-      if (/\.pdf$/i.test(file.name)) {
+      if (kind === "pdf") {
         const result = await parsePdfStatement(await file.arrayBuffer());
         if (!result.ok) {
           toast.error(result.message);
@@ -113,7 +149,7 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       }
 
       // Excel dari aplikasi lain (Money Manager, Wallet, dsb).
-      if (/\.xlsx$/i.test(file.name)) {
+      if (kind === "xlsx") {
         const result = await parseXlsx(await file.arrayBuffer());
         if (!result.ok) {
           toast.error(result.message);
@@ -129,8 +165,14 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       const text = await file.text();
       const parsed = parseDelimited(text);
 
-      if (!parsed.headers.length || !parsed.rows.length) {
-        toast.error("File tidak berisi baris data yang bisa dibaca.");
+      // Pesan dibedakan supaya pengguna tahu harus memperbaiki apa.
+      if (!parsed.headers.length) {
+        toast.error("File ini kosong atau bukan berkas teks yang bisa dibaca.");
+        setFilename("");
+        return;
+      }
+      if (!parsed.rows.length) {
+        toast.error("File ini hanya berisi baris judul, tanpa data transaksi.");
         setFilename("");
         return;
       }
@@ -412,7 +454,14 @@ export function ImportSheet({ open, onClose }: { open: boolean; onClose: () => v
       <input
         ref={fileRef}
         type="file"
-        accept=".xlsx,.pdf,.csv,.tsv,.txt,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,text/csv,text/plain,application/json"
+        /*
+         * Sengaja longgar. Filter yang ketat membuat berkas jadi abu-abu dan
+         * tidak bisa dipilih di Android, karena file manager di sana kerap
+         * melaporkan .csv sebagai application/octet-stream atau bahkan
+         * application/vnd.ms-excel. Jenis berkasnya divalidasi dari isinya di
+         * `detectKind`, jadi tidak ada yang hilang dengan melonggarkan ini.
+         */
+        accept=".xlsx,.pdf,.csv,.tsv,.txt,.json,text/csv,text/comma-separated-values,text/plain,text/tab-separated-values,application/csv,application/x-csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/json,application/octet-stream"
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];
