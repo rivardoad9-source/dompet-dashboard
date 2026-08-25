@@ -29,9 +29,19 @@ interface Snapshot {
   state: AppState;
   /** False saat SSR dan render klien pertama, supaya skeleton yang tampil. */
   hydrated: boolean;
+  /**
+   * True kalau penulisan terakhir ke localStorage gagal.
+   *
+   * Ini kegagalan yang paling berbahaya di aplikasi tanpa server: kuota penuh
+   * atau mode privat membuat setiap simpan ditolak, sementara aplikasi tetap
+   * terlihat normal karena datanya masih ada di memori. Pengguna terus
+   * mencatat, lalu kehilangan semuanya begitu tab ditutup. Jadi kegagalannya
+   * harus terlihat, bukan ditelan diam-diam.
+   */
+  saveFailed: boolean;
 }
 
-const SERVER_SNAPSHOT: Snapshot = { state: emptyState(), hydrated: false };
+const SERVER_SNAPSHOT: Snapshot = { state: emptyState(), hydrated: false, saveFailed: false };
 
 let snapshot: Snapshot = SERVER_SNAPSHOT;
 const listeners = new Set<() => void>();
@@ -54,17 +64,20 @@ const getServerSnapshot = () => SERVER_SNAPSHOT;
    Persistensi
    ========================================================================== */
 
-function persist(state: AppState) {
+function persist(state: AppState): boolean {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    // Mode privat / kuota penuh — aplikasi tetap jalan di memori sesi ini.
+    // Kuota penuh atau mode privat. Pemanggil yang memutuskan apa yang
+    // ditampilkan — lihat `saveFailed` di Snapshot.
+    return false;
   }
 }
 
 function commit(next: AppState, save = true) {
-  snapshot = { state: next, hydrated: true };
-  if (save) persist(next);
+  const saveFailed = save ? !persist(next) : snapshot.saveFailed;
+  snapshot = { state: next, hydrated: true, saveFailed };
   emit();
 }
 
