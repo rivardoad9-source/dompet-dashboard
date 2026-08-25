@@ -36,3 +36,8 @@ export const BurnChart = dynamic(() => import("./TrendChart").then((m) => m.Burn
   ssr: false,
   loading: () => <ChartFallback height={150} />,
 });
+
+export const ExpenseBarChart = dynamic(
+  () => import("./TrendChart").then((m) => m.ExpenseBarChart),
+  { ssr: false, loading: () => <ChartFallback height={150} /> },
+);

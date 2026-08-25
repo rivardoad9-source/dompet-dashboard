@@ -34,7 +34,11 @@ function HistoryView() {
   const [query, setQuery] = useState(() => params.get("q") ?? "");
   const [key, setKey] = useCurrentMonth();
   const [allMonths, setAllMonths] = useState(false);
-  const [type, setType] = useState<TypeFilter>("all");
+  // Dibuka dari kartu "Realisasi" di Beranda, yang menunjuk ke pengeluaran saja.
+  const [type, setType] = useState<TypeFilter>(() => {
+    const initial = params.get("type");
+    return initial === "in" || initial === "out" ? initial : "all";
+  });
   const [category, setCategory] = useState<string>("all");
   const [exporting, setExporting] = useState(false);
 

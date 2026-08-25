@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, PieChart, Plus, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Pencil, PieChart, Plus, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCategory } from "@/lib/categories";
 import { formatCompact, formatIDR, monthLabel, STATUS_META } from "@/lib/format";
@@ -152,7 +152,7 @@ export default function AnggaranPage() {
         <Card className="dp-rise col-span-12 xl:col-span-7">
           <CardHeader
             title="Alokasi per Kategori"
-            subtitle="Ketuk baris untuk mengubah plafon"
+            subtitle="Ketuk baris mana pun untuk mengubah plafonnya"
             action={<SlidersHorizontal className="size-4 text-ink-faint" />}
           />
           <CardBody className="pt-2">
@@ -214,6 +214,16 @@ export default function AnggaranPage() {
                                 {Math.round(row.pct)}%
                               </span>
                             </span>
+                          </span>
+
+                          {/* Tanda bahwa barisnya bisa diketuk. Tanpa ini
+                              barisnya terlihat seperti bacaan biasa, dan
+                              pengaturan plafon jadi tidak pernah ditemukan. */}
+                          <span
+                            aria-hidden
+                            className="grid size-7 shrink-0 place-items-center rounded-lg bg-surface-2 text-ink-faint transition-all duration-200 group-hover:bg-brand-soft group-hover:text-brand"
+                          >
+                            <Pencil className="size-3.5" />
                           </span>
                         </div>
                       </button>

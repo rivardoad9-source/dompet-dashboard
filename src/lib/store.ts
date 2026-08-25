@@ -151,9 +151,25 @@ export function hydrateStore() {
     // Kunjungan pertama: tampilkan dataset demo supaya template langsung hidup.
     // Bisa dimatikan lewat config untuk pemasangan ke pengguna sungguhan, dan
     // dinyalakan per-kunjungan lewat `?demo` untuk tautan pratinjau.
-    const first = DEMO_DATA_ON_FIRST_RUN || demoRequested() ? buildSeedState() : emptyState();
-    const next = raw ? reconcile(JSON.parse(raw)) : first;
-    commit(next, !raw);
+    const wantsDemo = DEMO_DATA_ON_FIRST_RUN || demoRequested();
+    const stored = raw ? reconcile(JSON.parse(raw)) : null;
+
+    /*
+     * Dianggap kosong kalau tidak ada catatan sama sekali.
+     *
+     * Membuka aplikasi sekali saja sudah menulis state kosong ke penyimpanan,
+     * jadi kalau syaratnya cuma "belum ada data tersimpan", tautan `?demo`
+     * gagal memuat apa pun begitu pengunjung sempat membuka URL polosnya lebih
+     * dulu — persis kasus yang paling sering terjadi saat tautan dibagikan.
+     *
+     * Anggaran bawaan sengaja tidak ikut dihitung: itu ada sejak awal dan bukan
+     * hasil ketikan siapa pun. Yang dijaga adalah transaksi dan target
+     * tabungan — begitu salah satunya terisi, tidak ada yang boleh menimpanya.
+     */
+    const blank = !stored || (!stored.transactions.length && !stored.goals.length);
+
+    const next = wantsDemo && blank ? buildSeedState() : (stored ?? emptyState());
+    commit(next, !raw || (wantsDemo && blank));
   } catch {
     // Data tersimpan rusak. Tampilkan sesuatu, tapi JANGAN menyimpan —
     // menimpanya akan menghapus satu-satunya sisa yang mungkin masih bisa
