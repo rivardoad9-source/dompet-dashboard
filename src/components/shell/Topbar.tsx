@@ -1,12 +1,23 @@
 "use client";
 
-import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Moon,
+  Plus,
+  Search,
+  Settings,
+  Sparkles,
+  Sun,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { pageTitle } from "@/lib/nav";
 import { actions, useStore } from "@/lib/store";
+import type { ThemeName } from "@/lib/types";
 import { Button, IconButton } from "@/components/ui/Button";
 import { useTransactionSheet } from "@/components/transaction/TransactionSheetProvider";
 import { Logo } from "./Logo";
@@ -25,16 +36,30 @@ function greeting(hydrated: boolean): string {
   return "Selamat malam";
 }
 
+/**
+ * Tombol tema berputar melewati ketiga tema.
+ *
+ * Tabelnya di sini, bukan tersebar di dalam JSX, supaya menambah tema keempat
+ * cukup menambah satu entri — ikon dan labelnya ikut sendiri.
+ */
+const THEME_CYCLE: Array<{ id: ThemeName; next: ThemeName; icon: LucideIcon; label: string }> = [
+  { id: "warm", next: "midnight", icon: Moon, label: "Ganti ke tema Midnight" },
+  { id: "midnight", next: "glass", icon: Sparkles, label: "Ganti ke tema Glass" },
+  { id: "glass", next: "warm", icon: Sun, label: "Ganti ke tema Warm" },
+];
+
 export function ThemeToggle({ className }: { className?: string }) {
   const { state } = useStore();
-  const midnight = state.settings.theme === "midnight";
+  const step = THEME_CYCLE.find((t) => t.id === state.settings.theme) ?? THEME_CYCLE[0];
+  const Icon = step.icon;
+
   return (
     <IconButton
-      label={midnight ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+      label={step.label}
       className={className}
-      onClick={() => actions.setSettings({ theme: midnight ? "warm" : "midnight" })}
+      onClick={() => actions.setSettings({ theme: step.next })}
     >
-      {midnight ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+      <Icon className="size-[18px]" />
     </IconButton>
   );
 }

@@ -9,7 +9,7 @@ Satu basis kode, dua wajah:
 | `< 1024px` | Aplikasi mobile lebar maksimal **430px**, terpusat, dengan bottom navigation 4 tab + tombol aksi cepat |
 | `≥ 1024px` | Admin dashboard penuh: sidebar tetap, topbar dengan pencarian, dan grid kartu 12 kolom |
 
-Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** (indigo pekat dengan aksen terakota).
+Tiga tema bawaan: **Warm** (krem–terakota, minimalis-organik), **Midnight** (indigo pekat dengan aksen terakota), dan **Glass** (panel buram bergaya iOS di atas latar bergradien).
 
 ---
 
@@ -44,7 +44,7 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 - Ekspor dalam **lima format** sesuai filter yang aktif — lihat di bawah
 
 **Pengaturan**
-- **Foto profil** — dipotong persegi dan diperkecil ke 128px sebelum disimpan (930 KB jadi 2 KB), muncul di topbar dan sidebar
+- **Foto profil** dengan pemotong sendiri — geser dan atur zoom untuk memilih bagiannya, lalu disimpan sebagai persegi 128px (930 KB jadi ~2 KB)
 - Nama panggilan, tema, dan mode sembunyikan nominal
 - **Backup & Kirim** lewat share sheet — backup langsung ke WhatsApp, email, atau Drive
 - Kartu **Keamanan Data**: status penyimpanan permanen, pengingat backup, dan tombol urungkan

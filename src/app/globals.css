@@ -118,6 +118,61 @@
   --cat-8: #a5b4fc;
 }
 
+/* --- Theme: Glass (iOS-like frosted panels over a coloured backdrop) --------
+   Permukaannya sengaja separuh tembus pandang. Blur-nya dipasang di bagian
+   Utilities di bawah, karena `backdrop-filter` bukan warna dan tidak bisa
+   dititipkan ke token. */
+[data-theme="glass"] {
+  --bg: #0b1024;
+  --bg-subtle: rgba(255, 255, 255, 0.04);
+  --surface: rgba(255, 255, 255, 0.09);
+  --surface-2: rgba(255, 255, 255, 0.14);
+  --surface-3: rgba(255, 255, 255, 0.2);
+
+  --ink: #f6f7ff;
+  --ink-muted: rgba(240, 242, 255, 0.72);
+  --ink-faint: rgba(240, 242, 255, 0.48);
+  --line: rgba(255, 255, 255, 0.16);
+  --line-strong: rgba(255, 255, 255, 0.3);
+
+  --brand: #7dd3fc;
+  --brand-strong: #a5e4ff;
+  --brand-soft: rgba(125, 211, 252, 0.18);
+  --brand-tint: rgba(125, 211, 252, 0.32);
+  --on-brand: #06283d;
+
+  --accent: #c4b5fd;
+  --accent-soft: rgba(196, 181, 253, 0.2);
+
+  --success: #6ee7b7;
+  --success-soft: rgba(110, 231, 183, 0.18);
+  --warning: #fcd34d;
+  --warning-soft: rgba(252, 211, 77, 0.18);
+  --danger: #fda4af;
+  --danger-soft: rgba(253, 164, 175, 0.2);
+  --on-danger: #3d0c17;
+
+  --hero-from: rgba(255, 255, 255, 0.18);
+  --hero-to: rgba(125, 211, 252, 0.28);
+  --hero-ink: #ffffff;
+  --hero-ink-muted: rgba(255, 255, 255, 0.75);
+
+  --ring: #7dd3fc;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 64px -24px rgba(0, 0, 0, 0.7);
+  --sheet-scrim: rgba(6, 10, 28, 0.6);
+
+  --cat-1: #7dd3fc;
+  --cat-2: #c4b5fd;
+  --cat-3: #6ee7b7;
+  --cat-4: #fcd34d;
+  --cat-5: #f9a8d4;
+  --cat-6: #fda4af;
+  --cat-7: #5eead4;
+  --cat-8: #bfdbfe;
+}
+
 /* --- Map tokens into Tailwind's utility namespace --- */
 @theme inline {
   --color-bg: var(--bg);
@@ -349,10 +404,66 @@ body {
   scrollbar-width: none;
 }
 
-/* Recharts inherits our focus ring otherwise */
-.recharts-wrapper:focus,
-.recharts-surface:focus {
+/* --------------------------------------------------------------------------
+   Grafik: matikan seleksi bawaan browser.
+
+   Menyentuh grafik di Android memicu pemilihan teks pada elemen SVG-nya, dan
+   yang muncul adalah kotak sorot putih tebal mengelilingi area plot — terlihat
+   seperti aplikasi error, padahal pengguna cuma ingin melihat tooltip.
+   Grafik tidak punya teks yang perlu disalin, jadi seleksinya dimatikan
+   sepenuhnya, termasuk callout tekan-tahan di iOS.
+   -------------------------------------------------------------------------- */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-responsive-container {
   outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus,
+.recharts-surface:focus-visible {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tema Glass — permukaan buram yang menyaring latar di belakangnya.
+
+   Efeknya hanya muncul kalau ada sesuatu untuk disaring, jadi latar halaman
+   diberi beberapa gradien warna. Blur-nya dipasang pada permukaan, bukan pada
+   token warna, karena `backdrop-filter` tidak bisa dinyatakan sebagai warna.
+   -------------------------------------------------------------------------- */
+[data-theme="glass"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(124, 107, 245, 0.42), transparent 60%),
+    radial-gradient(45rem 45rem at 95% 8%, rgba(236, 122, 168, 0.34), transparent 60%),
+    radial-gradient(50rem 50rem at 50% 110%, rgba(56, 189, 248, 0.3), transparent 62%);
+  background-attachment: fixed;
+}
+
+[data-theme="glass"] :is(.dp-card, .dp-sheet, .dp-glass) {
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+}
+
+/* Garis tipis terang di tepi atas — inilah yang membuat panelnya terbaca
+   sebagai kaca dan bukan sekadar kotak transparan. */
+[data-theme="glass"] .dp-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    var(--shadow-md);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  /* Tanpa dukungan blur, permukaan transparan membuat teks tidak terbaca. */
+  [data-theme="glass"] :is(.dp-card, .dp-sheet, .dp-glass) {
+    background-color: #1a1d3d;
+  }
 }
 
 /* ==========================================================================
@@ -379,7 +490,8 @@ body {
   /* Cetak hitam-putih di atas putih: hemat tinta dan selalu terbaca,
      apa pun tema yang sedang aktif. */
   :root,
-  [data-theme="midnight"] {
+  [data-theme="midnight"],
+  [data-theme="glass"] {
     --bg: #ffffff;
     --surface: #ffffff;
     --surface-2: #ffffff;

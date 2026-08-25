@@ -190,12 +190,18 @@ export function hydrateStore() {
   void requestPersistence();
 }
 
+const THEME_COLORS: Record<string, string> = {
+  warm: "#fdfbf7",
+  midnight: "#0d1230",
+  glass: "#0b1024",
+};
+
 export function applyTheme(theme: Settings["theme"]) {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.theme = theme;
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", theme === "midnight" ? "#0d1230" : "#fdfbf7");
+    ?.setAttribute("content", THEME_COLORS[theme] ?? THEME_COLORS.warm);
 }
 
 /* ==========================================================================

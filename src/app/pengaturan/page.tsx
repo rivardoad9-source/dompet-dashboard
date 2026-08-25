@@ -20,7 +20,7 @@ import {
   User,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { readAvatarFile } from "@/lib/avatar";
+
 import { BACKUP_REMINDER_AFTER } from "@/lib/config";
 import {
   checkPersistence,
@@ -39,6 +39,7 @@ import { HERO_METRICS } from "@/lib/hero-metrics";
 import { STORAGE_KEY, actions, useStore } from "@/lib/store";
 import type { HeroMetric } from "@/lib/types";
 import { PageIntro } from "@/components/shell/AppShell";
+import { AvatarCropSheet } from "@/components/shell/AvatarCropSheet";
 import { ExportSheet } from "@/components/export/ExportSheet";
 import { ImportSheet } from "@/components/export/ImportSheet";
 import { Button } from "@/components/ui/Button";
@@ -53,7 +54,7 @@ export default function PengaturanPage() {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
-  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [cropping, setCropping] = useState<File | null>(null);
   const [confirm, setConfirm] = useState<"clear" | "demo" | null>(null);
   const [sharing, setSharing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -72,19 +73,6 @@ export default function PengaturanPage() {
 
   const { settings, transactions, goals, budgets } = state;
   const bytes = typeof window !== "undefined" ? (window.localStorage.getItem(STORAGE_KEY)?.length ?? 0) : 0;
-
-  async function onAvatar(file: File) {
-    setAvatarBusy(true);
-    const result = await readAvatarFile(file);
-    setAvatarBusy(false);
-
-    if (!result.ok) {
-      toast.error(result.error);
-      return;
-    }
-    actions.setSettings({ avatar: result.dataUrl });
-    toast.success(`Foto profil disimpan (${Math.round(result.bytes / 1024)} KB)`);
-  }
 
   async function onImport(file: File) {
     const result = await readBackupFile(file);
@@ -235,11 +223,10 @@ export default function PengaturanPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    disabled={avatarBusy}
                     onClick={() => avatarRef.current?.click()}
                   >
                     <ImagePlus className="size-4" />
-                    {avatarBusy ? "Memproses…" : settings.avatar ? "Ganti foto" : "Pilih foto"}
+                    {settings.avatar ? "Ganti foto" : "Pilih foto"}
                   </Button>
                   {settings.avatar ? (
                     <Button
@@ -255,8 +242,8 @@ export default function PengaturanPage() {
                   ) : null}
                 </div>
                 <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
-                  Dipotong persegi dan diperkecil ke 128px sebelum disimpan, jadi ukurannya
-                  sekitar 8 KB dan tidak menggerus kuota penyimpanan.
+                  Kamu yang menentukan bagian mana yang dipakai — geser dan atur zoom, lalu
+                  disimpan sebagai persegi 128px (sekitar 8 KB).
                 </p>
               </div>
             </div>
@@ -268,7 +255,7 @@ export default function PengaturanPage() {
               className="sr-only"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) void onAvatar(file);
+                if (file) setCropping(file);
                 e.target.value = "";
               }}
             />
@@ -303,6 +290,7 @@ export default function PengaturanPage() {
                 options={[
                   { value: "warm", label: "Warm" },
                   { value: "midnight", label: "Midnight" },
+                  { value: "glass", label: "Glass" },
                 ]}
               />
             </Field>
@@ -361,6 +349,17 @@ export default function PengaturanPage() {
         <Database className="size-3.5" />
         Dompet v1.1.0 · Personal Finance Dashboard · Data lokal, tanpa server
       </p>
+
+      <AvatarCropSheet
+        file={cropping}
+        onClose={() => setCropping(null)}
+        onError={(message) => toast.error(message)}
+        onSave={(dataUrl, bytes) => {
+          actions.setSettings({ avatar: dataUrl });
+          setCropping(null);
+          toast.success(`Foto profil disimpan (${Math.max(1, Math.round(bytes / 1024))} KB)`);
+        }}
+      />
 
       <ImportSheet open={importing} onClose={() => setImporting(false)} />
 
