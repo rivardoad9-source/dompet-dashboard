@@ -13,16 +13,18 @@ import {
   monthTotals,
   totalSaved,
 } from "@/lib/stats";
-import { useStore } from "@/lib/store";
-import { BurnChart, CashflowChart, NetBarChart } from "@/components/charts/LazyCharts";
+import { actions, useStore } from "@/lib/store";
+import { BurnChart, CashflowChart, ExpenseBarChart, NetBarChart } from "@/components/charts/LazyCharts";
 import { BalanceHero } from "@/components/home/BalanceHero";
 import { BudgetOverviewCard } from "@/components/home/BudgetOverviewCard";
 import { GoalsPreviewCard } from "@/components/home/GoalsPreviewCard";
 import { RecentActivityCard } from "@/components/home/RecentActivityCard";
 import { StatTiles } from "@/components/home/StatTiles";
+import { DeltaBadge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { CardSkeleton, Skeleton } from "@/components/ui/Feedback";
 import { MonthPicker } from "@/components/ui/MonthPicker";
+import { Segmented } from "@/components/ui/Segmented";
 
 export default function BerandaPage() {
   const { state, hydrated } = useStore();
@@ -41,12 +43,25 @@ export default function BerandaPage() {
     const daysInMonth = new Date(y, m, 0).getDate();
     const daysLeft = isCurrent ? Math.max(0, daysInMonth - now.getDate()) : 0;
 
+    // Kalimat pembanding: rata-rata lima bulan sebelumnya sebagai acuan, bukan
+    // cuma bulan lalu — satu bulan yang kebetulan sepi membuat perbandingannya
+    // menyesatkan.
+    const past = trend.slice(0, -1).filter((t) => t.expense > 0);
+    const average = past.length ? past.reduce((s, t) => s + t.expense, 0) / past.length : 0;
+    const current = totals.expense;
+    const compareText = !average
+      ? "Belum ada bulan pembanding. Grafik ini akan berisi begitu kamu punya riwayat lebih panjang."
+      : current > average
+        ? `Bulan ini ${Math.round(((current - average) / average) * 100)}% di atas rata-rata ${past.length} bulan sebelumnya.`
+        : `Bulan ini ${Math.round(((average - current) / average) * 100)}% di bawah rata-rata ${past.length} bulan sebelumnya.`;
+
     return {
       summary,
       totals,
       trend,
       burn,
       expenseDelta,
+      compareText,
       daysLeft,
       balance: liquidBalance(state),
       saved: totalSaved(state.goals),
@@ -56,7 +71,8 @@ export default function BerandaPage() {
 
   if (!hydrated) return <HomeSkeleton />;
 
-  const { privacy, heroMetric } = state.settings;
+  const { privacy, heroMetric, homeChart } = state.settings;
+  const banding = homeChart === "banding";
 
   return (
     <div className="space-y-4 lg:space-y-5">
@@ -86,30 +102,66 @@ export default function BerandaPage() {
             privacy={privacy}
           />
 
+          {/* Dua pertanyaan berbeda, satu kartu: "apakah saya belanja terlalu
+              cepat bulan ini" dan "apakah bulan ini memang lebih boros dari
+              biasanya". Yang kedua butuh pembanding, yang pertama tidak. */}
           <Card>
             <CardHeader
-              title="Laju Pengeluaran"
-              subtitle={`Kumulatif ${monthLabel(key, true)} vs laju ideal`}
+              title={banding ? "Perbandingan Bulanan" : "Laju Pengeluaran"}
+              subtitle={
+                banding
+                  ? "Pengeluaran 6 bulan terakhir"
+                  : `Kumulatif ${monthLabel(key, true)} vs laju ideal`
+              }
               action={
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-[11px] font-bold"
-                  style={{
-                    color: data.summary.pct > 100 ? "var(--danger)" : "var(--success)",
-                    background: data.summary.pct > 100 ? "var(--danger-soft)" : "var(--success-soft)",
-                  }}
-                >
-                  <TrendingUp className="size-3" />
-                  {Math.round(data.summary.pct)}%
-                </span>
+                banding ? (
+                  <DeltaBadge value={data.expenseDelta} invert />
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-[11px] font-bold"
+                    style={{
+                      color: data.summary.pct > 100 ? "var(--danger)" : "var(--success)",
+                      background:
+                        data.summary.pct > 100 ? "var(--danger-soft)" : "var(--success-soft)",
+                    }}
+                  >
+                    <TrendingUp className="size-3" />
+                    {Math.round(data.summary.pct)}%
+                  </span>
+                )
               }
             />
             <CardBody className="pt-2">
-              <BurnChart data={data.burn} limit={data.summary.limit} privacy={privacy} />
-              <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
-                <Activity className="mt-0.5 size-3.5 shrink-0 text-ink-faint" />
-                Garis putus-putus adalah laju ideal. Kalau garis solid ada di atasnya, kamu belanja
-                lebih cepat dari plafon bulan ini.
-              </p>
+              <Segmented
+                name="Tampilan grafik"
+                size="sm"
+                value={homeChart}
+                onChange={(homeChart) => actions.setSettings({ homeChart })}
+                options={[
+                  { value: "laju", label: "Laju bulan ini" },
+                  { value: "banding", label: "Banding bulan" },
+                ]}
+                className="mb-4"
+              />
+
+              {banding ? (
+                <>
+                  <ExpenseBarChart data={data.trend} activeKey={key} privacy={privacy} />
+                  <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
+                    <Activity className="mt-0.5 size-3.5 shrink-0 text-ink-faint" />
+                    {data.compareText}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <BurnChart data={data.burn} limit={data.summary.limit} privacy={privacy} />
+                  <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
+                    <Activity className="mt-0.5 size-3.5 shrink-0 text-ink-faint" />
+                    Garis putus-putus adalah laju ideal. Kalau garis solid ada di atasnya, kamu
+                    belanja lebih cepat dari plafon bulan ini.
+                  </p>
+                </>
+              )}
             </CardBody>
           </Card>
         </div>

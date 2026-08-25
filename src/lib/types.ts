@@ -5,6 +5,14 @@ export type ThemeName = "warm" | "midnight";
 /** Angka besar yang disorot di kartu utama Beranda. Tabelnya di `hero-metrics.ts`. */
 export type HeroMetric = "saldo" | "keluar" | "masuk" | "sisa" | "anggaran";
 
+/**
+ * Grafik yang tampil di kartu tengah Beranda.
+ *
+ * `laju` menjawab "apakah saya belanja terlalu cepat bulan ini";
+ * `banding` menjawab "apakah bulan ini lebih boros dari biasanya".
+ */
+export type HomeChart = "laju" | "banding";
+
 export interface Transaction {
   id: string;
   type: TxType;
@@ -47,6 +55,16 @@ export interface Settings {
   privacy: boolean;
   /** Which figure headlines the balance card on the home page. */
   heroMetric: HeroMetric;
+  /** Which chart sits in the middle card on the home page. */
+  homeChart: HomeChart;
+  /**
+   * Foto profil sebagai data URL, atau string kosong kalau memakai inisial.
+   *
+   * Disimpan langsung di dalam state karena ikut berpindah lewat backup JSON —
+   * gambarnya diperkecil dulu saat dipilih (lihat `readAvatarFile`) supaya
+   * tidak menghabiskan kuota localStorage.
+   */
+  avatar: string;
 }
 
 export interface AppState {

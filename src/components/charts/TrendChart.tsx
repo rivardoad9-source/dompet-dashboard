@@ -161,6 +161,47 @@ export function NetBarChart({
 }
 
 /**
+ * Pengeluaran enam bulan terakhir, bulan yang sedang dilihat disorot.
+ *
+ * Laju kumulatif menjawab "apakah saya belanja terlalu cepat bulan ini", tapi
+ * tidak bisa menjawab "apakah bulan ini memang lebih boros dari biasanya" —
+ * untuk itu butuh pembanding. Batang yang tidak aktif sengaja diredupkan, bukan
+ * diberi warna lain, supaya perbandingannya soal tinggi batang saja.
+ */
+export function ExpenseBarChart({
+  data,
+  activeKey,
+  privacy = false,
+  height = 150,
+}: {
+  data: TrendPoint[];
+  activeKey: string;
+  privacy?: boolean;
+  height?: number;
+}) {
+  return (
+    <div style={{ height }} className="w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 6, left: -12, bottom: 0 }} barCategoryGap="26%">
+          <CartesianGrid strokeDasharray="3 6" stroke="var(--line)" vertical={false} />
+          <XAxis dataKey="label" {...AXIS} />
+          <YAxis {...AXIS} width={48} tickFormatter={(v: number) => formatAxis(v, privacy)} />
+          <Tooltip
+            content={<ChartTooltip privacy={privacy} />}
+            cursor={{ fill: "var(--surface-2)" }}
+          />
+          <Bar dataKey="expense" name="Keluar" radius={[6, 6, 6, 6]}>
+            {data.map((d) => (
+              <Cell key={d.key} fill={d.key === activeKey ? "var(--brand)" : "var(--brand-tint)"} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/**
  * Cumulative spend for the month against an even-pace reference line — the
  * quickest way to see whether you're burning too fast, not just too much.
  */

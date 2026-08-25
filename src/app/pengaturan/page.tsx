@@ -5,6 +5,7 @@ import {
   Download,
   Eye,
   FileJson,
+  ImagePlus,
   Info,
   Moon,
   Palette,
@@ -19,6 +20,7 @@ import {
   User,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { readAvatarFile } from "@/lib/avatar";
 import { BACKUP_REMINDER_AFTER } from "@/lib/config";
 import {
   checkPersistence,
@@ -50,6 +52,8 @@ export default function PengaturanPage() {
   const { state, hydrated } = useStore();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const avatarRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const [confirm, setConfirm] = useState<"clear" | "demo" | null>(null);
   const [sharing, setSharing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -68,6 +72,19 @@ export default function PengaturanPage() {
 
   const { settings, transactions, goals, budgets } = state;
   const bytes = typeof window !== "undefined" ? (window.localStorage.getItem(STORAGE_KEY)?.length ?? 0) : 0;
+
+  async function onAvatar(file: File) {
+    setAvatarBusy(true);
+    const result = await readAvatarFile(file);
+    setAvatarBusy(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    actions.setSettings({ avatar: result.dataUrl });
+    toast.success(`Foto profil disimpan (${Math.round(result.bytes / 1024)} KB)`);
+  }
 
   async function onImport(file: File) {
     const result = await readBackupFile(file);
@@ -197,8 +214,65 @@ export default function PengaturanPage() {
 
         {/* --- Profil --- */}
         <Card className="dp-rise col-span-12 xl:col-span-5">
-          <CardHeader title="Profil" subtitle="Nama yang muncul di sapaan beranda" />
+          <CardHeader title="Profil" subtitle="Foto dan nama yang muncul di sapaan beranda" />
           <CardBody className="space-y-4 pt-2">
+            <div className="flex items-center gap-4">
+              {settings.avatar ? (
+                /* eslint-disable-next-line @next/next/no-img-element -- data URL lokal */
+                <img
+                  src={settings.avatar}
+                  alt="Foto profil sekarang"
+                  className="size-16 shrink-0 rounded-2xl object-cover"
+                />
+              ) : (
+                <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand-soft text-lg font-extrabold text-brand">
+                  {settings.name.trim().slice(0, 2).toUpperCase() || "DP"}
+                </span>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={avatarBusy}
+                    onClick={() => avatarRef.current?.click()}
+                  >
+                    <ImagePlus className="size-4" />
+                    {avatarBusy ? "Memproses…" : settings.avatar ? "Ganti foto" : "Pilih foto"}
+                  </Button>
+                  {settings.avatar ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        actions.setSettings({ avatar: "" });
+                        toast.success("Foto profil dihapus");
+                      }}
+                    >
+                      Hapus
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
+                  Dipotong persegi dan diperkecil ke 128px sebelum disimpan, jadi ukurannya
+                  sekitar 8 KB dan tidak menggerus kuota penyimpanan.
+                </p>
+              </div>
+            </div>
+
+            <input
+              ref={avatarRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onAvatar(file);
+                e.target.value = "";
+              }}
+            />
+
             <Field label="Nama panggilan" htmlFor="nama">
               <Input
                 id="nama"

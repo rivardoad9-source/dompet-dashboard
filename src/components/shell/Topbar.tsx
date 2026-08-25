@@ -83,16 +83,44 @@ function initialsOf(name: string) {
   return name.trim().slice(0, 2).toUpperCase() || "DP";
 }
 
-function Avatar({ name }: { name: string }) {
+/**
+ * Foto profil kalau ada, inisial kalau tidak.
+ *
+ * `<img>` biasa, bukan `next/image`: sumbernya data URL dari localStorage, jadi
+ * tidak ada yang bisa dioptimalkan di sisi server dan pengoptimalnya justru
+ * akan menolak skema `data:`.
+ */
+function AvatarFace({ name, avatar, className }: { name: string; avatar: string; className?: string }) {
+  if (avatar) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element -- data URL lokal, bukan aset yang bisa dioptimalkan */
+      <img
+        src={avatar}
+        alt=""
+        className={cn("shrink-0 rounded-xl object-cover", className)}
+      />
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "grid shrink-0 place-items-center rounded-xl bg-brand-soft text-xs font-extrabold text-brand",
+        className,
+      )}
+    >
+      {initialsOf(name)}
+    </span>
+  );
+}
+
+function Avatar({ name, avatar }: { name: string; avatar: string }) {
   return (
     <Link
       href="/pengaturan"
       className="flex items-center gap-2.5 rounded-xl p-1 pr-2 transition-colors duration-200 hover:bg-surface-2"
       aria-label="Buka pengaturan"
     >
-      <span className="grid size-9 place-items-center rounded-xl bg-brand-soft text-xs font-extrabold text-brand">
-        {initialsOf(name)}
-      </span>
+      <AvatarFace name={name} avatar={avatar} className="size-9" />
       <span className="hidden text-left leading-tight 2xl:block">
         <span className="block text-xs font-bold text-ink">{name}</span>
         <span className="block text-[10px] text-ink-faint">Akun lokal</span>
@@ -109,7 +137,15 @@ function Avatar({ name }: { name: string }) {
  * dijangkau dari HP. Ikon gerigi kecil di pojok membedakannya dari avatar biasa,
  * supaya jelas ini pintu ke pengaturan dan bukan sekadar penanda profil.
  */
-function MobileProfileButton({ name, active }: { name: string; active: boolean }) {
+function MobileProfileButton({
+  name,
+  avatar,
+  active,
+}: {
+  name: string;
+  avatar: string;
+  active: boolean;
+}) {
   return (
     <Link
       href="/pengaturan"
@@ -117,12 +153,21 @@ function MobileProfileButton({ name, active }: { name: string; active: boolean }
       aria-current={active ? "page" : undefined}
       className={cn(
         // 44px: batas minimum target sentuh yang nyaman untuk ibu jari.
-        "relative grid size-11 shrink-0 place-items-center rounded-xl text-xs font-extrabold",
+        "relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl text-xs font-extrabold",
         "transition-all duration-200 ease-out active:scale-95",
-        active ? "bg-brand text-on-brand" : "bg-brand-soft text-brand hover:bg-brand-tint",
+        avatar
+          ? "bg-surface-2"
+          : active
+            ? "bg-brand text-on-brand"
+            : "bg-brand-soft text-brand hover:bg-brand-tint",
       )}
     >
-      {initialsOf(name)}
+      {avatar ? (
+        /* eslint-disable-next-line @next/next/no-img-element -- data URL lokal */
+        <img src={avatar} alt="" className="size-full object-cover" />
+      ) : (
+        initialsOf(name)
+      )}
       <span
         aria-hidden
         className={cn(
@@ -166,7 +211,11 @@ export function Topbar() {
         )}
         <PrivacyToggle />
         <ThemeToggle />
-        <MobileProfileButton name={state.settings.name} active={pathname === "/pengaturan"} />
+        <MobileProfileButton
+          name={state.settings.name}
+          avatar={state.settings.avatar}
+          active={pathname === "/pengaturan"}
+        />
       </div>
 
       {/* ---- Desktop ---- */}
@@ -187,7 +236,7 @@ export function Topbar() {
             Catat Transaksi
           </Button>
           <span aria-hidden className="mx-1 h-8 w-px bg-line" />
-          <Avatar name={state.settings.name} />
+          <Avatar name={state.settings.name} avatar={state.settings.avatar} />
         </div>
       </div>
     </header>

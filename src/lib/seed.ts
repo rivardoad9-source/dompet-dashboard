@@ -194,7 +194,7 @@ export function buildSeedState(now = new Date()): AppState {
     transactions: buildSeedTransactions(now),
     budgets: DEFAULT_BUDGETS,
     goals: buildSeedGoals(now),
-    settings: { name: "Rivardo", theme: "warm", privacy: false, heroMetric: "saldo" },
+    settings: { name: "Rivardo", theme: "warm", privacy: false, heroMetric: "saldo", homeChart: "laju", avatar: "" },
   };
 }
 
@@ -203,6 +203,6 @@ export function emptyState(): AppState {
     transactions: [],
     budgets: DEFAULT_BUDGETS,
     goals: [],
-    settings: { name: "Kamu", theme: "warm", privacy: false, heroMetric: "saldo" },
+    settings: { name: "Kamu", theme: "warm", privacy: false, heroMetric: "saldo", homeChart: "laju", avatar: "" },
   };
 }

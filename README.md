@@ -20,14 +20,14 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 - **Angka utama bisa diganti** — ketuk labelnya untuk memilih Saldo likuid, Keluar, Masuk, Sisa (masuk−keluar), atau Sisa anggaran. Dua angka pendamping ikut menyesuaikan supaya tidak ada nominal yang tampil dua kali dalam satu kartu; pilihannya tersimpan
 - **Ring Anggaran vs Realisasi** — donut SVG interaktif; tiap segmen adalah satu kategori, arahkan kursor (atau fokus keyboard) untuk melihat rinciannya di tengah ring
 - Indikator warna dinamis: hijau `<70%`, kuning `70–90%`, merah `>90%`
-- Empat kartu metrik: realisasi, plafon, sisa aman, dan jatah harian
-- Grafik laju pengeluaran kumulatif vs laju ideal
+- Empat kartu metrik: realisasi, plafon, sisa aman, dan jatah harian — **semuanya bisa diketuk** menuju halaman yang bisa menindaklanjutinya
+- Grafik yang bisa ditukar: **laju pengeluaran kumulatif** vs laju ideal, atau **perbandingan 6 bulan** dengan bulan berjalan disorot dan kalimat pembanding terhadap rata-rata
 - Arus kas 6 bulan dan sisa (surplus/defisit) per bulan
 - Lima aktivitas terkini dan ringkasan target tabungan
 - Tombol **+ Catat Transaksi** membuka bottom sheet: nominal, in/out, kategori, catatan, tanggal
 
 **Anggaran**
-- Plafon per kategori, ketuk baris mana pun untuk mengubahnya
+- Plafon per kategori, ketuk baris mana pun untuk mengubahnya — tiap baris berikon pensil supaya jelas bisa diketuk
 - Progress bar yang tetap terbaca saat melewati 100% (kelebihan digambar berarsir)
 - Peringatan otomatis untuk kategori yang mendekati atau melewati limit
 - Komposisi seluruh pengeluaran bulan itu, termasuk kategori tanpa plafon
@@ -44,6 +44,7 @@ Dua tema bawaan: **Warm** (krem–terakota, minimalis-organik) dan **Midnight** 
 - Ekspor dalam **lima format** sesuai filter yang aktif — lihat di bawah
 
 **Pengaturan**
+- **Foto profil** — dipotong persegi dan diperkecil ke 128px sebelum disimpan (930 KB jadi 2 KB), muncul di topbar dan sidebar
 - Nama panggilan, tema, dan mode sembunyikan nominal
 - **Backup & Kirim** lewat share sheet — backup langsung ke WhatsApp, email, atau Drive
 - Kartu **Keamanan Data**: status penyimpanan permanen, pengingat backup, dan tombol urungkan
