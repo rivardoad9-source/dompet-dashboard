@@ -95,18 +95,36 @@ export interface UndoSnapshot {
  * Tambahkan". Riwayat berlapis akan menggandakan pemakaian penyimpanan tanpa
  * menambah perlindungan yang berarti.
  */
-export function saveUndo(state: AppState, label: string) {
-  if (typeof window === "undefined") return;
+/**
+ * @returns false kalau snapshot gagal disimpan — pemanggil wajib berhenti
+ * menjanjikan "bisa diurungkan" saat itu terjadi.
+ */
+export function saveUndo(state: AppState, label: string): boolean {
+  if (typeof window === "undefined") return false;
+
   const snapshot: UndoSnapshot = {
     state,
     label,
     at: Date.now(),
     transactions: state.transactions.length,
   };
+
   try {
+    /*
+     * Buang snapshot lama lebih dulu.
+     *
+     * Snapshot berukuran sebesar seluruh data pengguna, jadi pada penyimpanan
+     * yang nyaris penuh menulis yang baru sebelum melepas yang lama hampir
+     * pasti ditolak — padahal ruang yang dibutuhkan sebenarnya sudah dipegang
+     * oleh snapshot sebelumnya.
+     */
+    window.localStorage.removeItem(UNDO_KEY);
     window.localStorage.setItem(UNDO_KEY, JSON.stringify(snapshot));
+    return true;
   } catch {
-    // Kuota penuh — tindakan utamanya tetap boleh jalan.
+    // Kuota tetap penuh. Tindakan utamanya boleh jalan — menghapus data justru
+    // membebaskan ruang — tapi jaring pengamannya tidak ada.
+    return false;
   }
 }
 

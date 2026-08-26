@@ -2,8 +2,20 @@ import { getCategory } from "./categories";
 import { markBackupTaken } from "./durability";
 import type { AppState, Transaction } from "./types";
 
+/**
+ * Nilai yang diawali `=`, `+`, `-`, `@`, tab, atau carriage return dieksekusi
+ * sebagai rumus oleh Excel dan Google Sheets begitu CSV-nya dibuka. Catatan
+ * seperti `=HYPERLINK("http://jahat.id","klik")` — entah diketik sendiri atau
+ * ikut terbawa dari berkas yang diimpor — karena itu bisa berjalan di komputer
+ * siapa pun yang menerima ekspornya.
+ *
+ * Diawali kutip satu supaya dibaca sebagai teks. Ekspor .xlsx tidak butuh ini:
+ * sel teks di sana ditulis sebagai `inlineStr`, dan Excel tidak pernah
+ * mengevaluasinya sebagai rumus.
+ */
 function escapeCsv(value: string | number): string {
-  const s = String(value);
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -28,7 +40,8 @@ function stamp() {
  * Semicolon-delimited so Excel with an Indonesian locale opens it in columns
  * without an import wizard. The BOM keeps accented characters intact.
  */
-export function exportTransactionsCsv(transactions: Transaction[], filename?: string) {
+/** Dipisah dari pengunduhannya supaya isinya bisa diuji tanpa menyentuh DOM. */
+export function buildTransactionsCsv(transactions: Transaction[]): { csv: string; count: number } {
   const header = ["Tanggal", "Tipe", "Kategori", "Nominal", "Catatan"];
   const rows = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
@@ -40,12 +53,19 @@ export function exportTransactionsCsv(transactions: Transaction[], filename?: st
       t.note,
     ]);
 
-  const csv = [header, ...rows].map((r) => r.map(escapeCsv).join(";")).join("\r\n");
+  return {
+    csv: [header, ...rows].map((r) => r.map(escapeCsv).join(";")).join("\r\n"),
+    count: rows.length,
+  };
+}
+
+export function exportTransactionsCsv(transactions: Transaction[], filename?: string) {
+  const { csv, count } = buildTransactionsCsv(transactions);
   download(
     new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" }),
     filename ?? `dompet-transaksi-${stamp()}.csv`,
   );
-  return rows.length;
+  return count;
 }
 
 function backupPayload(state: AppState): { json: string; filename: string } {

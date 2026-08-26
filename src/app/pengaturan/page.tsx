@@ -375,8 +375,9 @@ export default function PengaturanPage() {
         open={confirm === "clear"}
         onClose={() => setConfirm(null)}
         onConfirm={() => {
-          actions.clearAll();
-          toast.success("Semua data dihapus");
+          const undoable = actions.clearAll();
+          if (undoable) toast.success("Semua data dihapus — masih bisa diurungkan");
+          else toast.error("Semua data dihapus, tapi cadangan urungkan gagal disimpan.");
         }}
         title="Hapus semua data?"
         description="Transaksi, anggaran, dan target tabungan akan dikosongkan. Keadaan sekarang disimpan sekali sebagai cadangan, jadi masih bisa diurungkan dari kartu Keamanan Data — tapi backup JSON tetap pengaman yang paling andal."
@@ -387,8 +388,9 @@ export default function PengaturanPage() {
         open={confirm === "demo"}
         onClose={() => setConfirm(null)}
         onConfirm={() => {
-          actions.loadDemoData();
-          toast.success("Data demo dimuat ulang");
+          const undoable = actions.loadDemoData();
+          if (undoable) toast.success("Data demo dimuat — masih bisa diurungkan");
+          else toast.error("Data demo dimuat, tapi cadangan urungkan gagal disimpan.");
         }}
         title="Muat ulang data demo?"
         description="Data kamu saat ini akan diganti dengan dataset contoh 6 bulan."

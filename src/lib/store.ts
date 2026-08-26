@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { DEMO_DATA_ON_FIRST_RUN } from "./config";
 import { clearUndo, readUndo, requestPersistence, saveUndo } from "./durability";
+import { clampAmount } from "./format";
 import { isUuid, newId } from "./ids";
 import { buildSeedState, emptyState } from "./seed";
 import type { AppState, Budget, Deposit, Goal, Settings, Transaction } from "./types";
@@ -108,7 +109,37 @@ function reconcile(raw: unknown): AppState {
     settings: { ...base.settings, ...(parsed.settings ?? {}) },
   };
 
-  return migrateIds(state);
+  return sanitizeAmounts(migrateIds(state));
+}
+
+/**
+ * Membuang nominal yang tidak masuk akal dari data yang dibaca.
+ *
+ * Backup yang dipulihkan bisa berisi apa saja: berkas dari versi lama, hasil
+ * suntingan tangan, atau — yang paling mungkin — nominal `Infinity` yang
+ * ditulis versi sebelum batas nominal ada. `JSON.stringify(Infinity)`
+ * menghasilkan `null`, jadi setelah sekali putaran backup nilainya kembali
+ * sebagai `null` dan membuat seluruh total menjadi `NaN`. Sekali `NaN` masuk,
+ * setiap angka di aplikasi ikut rusak dan tidak ada cara memulihkannya.
+ *
+ * Karena itu penyaringan dilakukan di sini, di pintu masuk — bukan di setiap
+ * tempat yang menjumlahkan.
+ */
+function sanitizeAmounts(state: AppState): AppState {
+  return {
+    ...state,
+    transactions: state.transactions
+      .map((t) => ({ ...t, amount: clampAmount(t.amount) }))
+      .filter((t) => t.amount > 0),
+    goals: state.goals.map((g) => ({
+      ...g,
+      target: clampAmount(g.target),
+      deposits: g.deposits
+        .map((d) => ({ ...d, amount: clampAmount(d.amount) }))
+        .filter((d) => d.amount > 0),
+    })),
+    budgets: state.budgets.map((b) => ({ ...b, limit: clampAmount(b.limit) })),
+  };
 }
 
 /**
@@ -325,23 +356,43 @@ export const actions = {
    * supaya salah tekan bisa diurungkan — lihat `undoLast`.
    */
 
-  /** Dipakai Impor dan Pulihkan dari JSON di tab Pengaturan. */
-  replaceState(next: AppState, label = "Ganti seluruh data") {
-    saveUndo(snapshot.state, label);
-    commit(next);
-    applyTheme(next.settings.theme);
+  /**
+   * Dipakai Impor dan Pulihkan dari JSON di tab Pengaturan.
+   *
+   * @returns false kalau snapshot urungkan gagal disimpan, sehingga tindakan
+   * ini TIDAK bisa dibatalkan. Pemanggil harus mengatakannya apa adanya —
+   * menjanjikan tombol Urungkan yang tidak ada adalah cara pasti kehilangan
+   * kepercayaan pengguna.
+   */
+  replaceState(next: AppState, label = "Ganti seluruh data"): boolean {
+    const undoable = saveUndo(snapshot.state, label);
+    /*
+     * Wajib disaring, bukan opsional.
+     *
+     * Isi berkas backup sepenuhnya di luar kendali kita — bisa dari versi lama,
+     * hasil suntingan tangan, atau memuat `null` karena `JSON.stringify`
+     * mengubah `Infinity` menjadi itu. Tanpa saringan ini satu berkas cacat
+     * cukup untuk membuat seluruh angka di aplikasi menjadi `NaN`, dan justru
+     * inilah jalur yang dipakai orang ketika sedang panik kehilangan data.
+     */
+    const safe = sanitizeAmounts(next);
+    commit(safe);
+    applyTheme(safe.settings.theme);
+    return undoable;
   },
 
-  loadDemoData() {
-    saveUndo(snapshot.state, "Muat ulang data demo");
+  loadDemoData(): boolean {
+    const undoable = saveUndo(snapshot.state, "Muat ulang data demo");
     const seeded = buildSeedState();
     commit({ ...seeded, settings: snapshot.state.settings });
+    return undoable;
   },
 
-  clearAll() {
-    saveUndo(snapshot.state, "Hapus semua data");
+  clearAll(): boolean {
+    const undoable = saveUndo(snapshot.state, "Hapus semua data");
     const cleared = emptyState();
     commit({ ...cleared, settings: snapshot.state.settings });
+    return undoable;
   },
 
   /**
