@@ -68,9 +68,32 @@ export function formatNumberInput(value: string): string {
   return PLAIN.format(Number(digits));
 }
 
+/**
+ * Batas atas satu nominal: Rp 999.999.999.999.
+ *
+ * Bukan angka sembarangan. Tanpa batas, mengetik digit terus-menerus di kolom
+ * nominal menghasilkan `Infinity` — dan `JSON.stringify(Infinity)` adalah
+ * `null`, jadi begitu backup dipulihkan seluruh catatan berubah jadi `NaN`.
+ * Batas ini juga menjaga penjumlahan tetap di bawah `Number.MAX_SAFE_INTEGER`,
+ * supaya total tidak diam-diam meleset pada angka besar.
+ */
+export const MAX_AMOUNT = 999_999_999_999;
+
+/**
+ * Membersihkan angka apa pun menjadi nominal yang aman disimpan.
+ *
+ * Dipakai di setiap pintu masuk nominal — ketikan, impor, dan pemulihan
+ * backup — supaya tidak ada satu jalur pun yang bisa memasukkan `NaN`,
+ * `Infinity`, atau angka di luar jangkauan aman ke dalam data pengguna.
+ */
+export function clampAmount(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(MAX_AMOUNT, Math.max(0, Math.round(Math.abs(value))));
+}
+
 export function parseNumberInput(value: string): number {
   const digits = value.replace(/\D/g, "");
-  return digits ? Number(digits) : 0;
+  return digits ? clampAmount(Number(digits)) : 0;
 }
 
 /** `YYYY-MM` key used to bucket everything by month. */

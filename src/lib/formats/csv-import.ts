@@ -1,4 +1,5 @@
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../categories";
+import { clampAmount } from "../format";
 import { newId } from "../ids";
 import type { Transaction, TxType } from "../types";
 
@@ -519,8 +520,12 @@ export function buildTransactions(sheet: ParsedSheet, mapping: ColumnMapping): I
       if (signMatters) type = primary < 0 ? "out" : "in";
     }
 
+    // Berkas dari aplikasi lain bisa memuat angka raksasa atau rusak; bersihkan
+    // di sini supaya tidak ada nominal tak masuk akal yang menembus ke data.
+    amount = amount === null ? null : clampAmount(amount);
+
     if (amount === null || amount === 0) {
-      skipped.push({ row: i + 2, reason: "nominal kosong atau nol" });
+      skipped.push({ row: i + 2, reason: "nominal kosong, nol, atau tidak masuk akal" });
       return;
     }
 

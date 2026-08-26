@@ -92,6 +92,10 @@ export function AmountInput({
         id={inputId}
         inputMode="numeric"
         autoComplete="off"
+        /* Rp 999.999.999.999 dengan pemisah ribuan = 19 karakter. Batas
+           sebenarnya dijaga clampAmount; ini sekadar menghentikan ketikan
+           yang jelas tidak masuk akal sebelum sampai ke sana. */
+        maxLength={19}
         autoFocus={autoFocus}
         value={value ? formatNumberInput(String(value)) : ""}
         placeholder={placeholder}
