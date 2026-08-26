@@ -13,10 +13,21 @@ export function TransactionRow({
   tx,
   privacy = false,
   showDate = false,
+  onSelect,
 }: {
   tx: Transaction;
   privacy?: boolean;
   showDate?: boolean;
+  /**
+   * Dipanggil tepat sebelum sheet edit dibuka.
+   *
+   * Baris ini membuka sheet edit global, jadi kalau ia dirender dari dalam
+   * sheet lain (mis. rincian harian), hasilnya dua dialog bertumpuk — dan
+   * karena masing-masing memasang listener Escape sendiri, satu tekan Escape
+   * menutup dua-duanya. Pemanggil memakai kait ini untuk menutup dirinya
+   * lebih dulu, sehingga hanya ada satu dialog terbuka kapan pun.
+   */
+  onSelect?: () => void;
 }) {
   const sheet = useTransactionSheet();
   const cat = getCategory(tx.categoryId);
@@ -26,7 +37,10 @@ export function TransactionRow({
   return (
     <button
       type="button"
-      onClick={() => sheet.open(tx)}
+      onClick={() => {
+        onSelect?.();
+        sheet.open(tx);
+      }}
       className={cn(
         "group flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 text-left",
         "transition-colors duration-200 ease-out hover:bg-surface-2 active:scale-[0.99]",
@@ -70,11 +84,16 @@ export function TransactionList({
   privacy = false,
   emptyTitle = "Belum ada transaksi",
   emptyDescription = "Catat pengeluaran pertamamu lewat tombol + di bawah.",
+  showDate = true,
+  onSelect,
 }: {
   transactions: Transaction[];
   privacy?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  showDate?: boolean;
+  /** Diteruskan ke tiap baris — lihat `TransactionRow`. */
+  onSelect?: () => void;
 }) {
   if (!transactions.length) {
     return <EmptyState icon={Receipt} title={emptyTitle} description={emptyDescription} />;
@@ -84,7 +103,7 @@ export function TransactionList({
     <ul className="-mx-2 space-y-0.5">
       {transactions.map((tx) => (
         <li key={tx.id}>
-          <TransactionRow tx={tx} privacy={privacy} showDate />
+          <TransactionRow tx={tx} privacy={privacy} showDate={showDate} onSelect={onSelect} />
         </li>
       ))}
     </ul>

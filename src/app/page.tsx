@@ -7,6 +7,7 @@ import { useCurrentMonth } from "@/lib/hooks";
 import {
   budgetSummary,
   dailyBurn,
+  dailySummary,
   deltaVsPrevious,
   liquidBalance,
   monthlyTrend,
@@ -17,6 +18,7 @@ import { actions, useStore } from "@/lib/store";
 import { BurnChart, CashflowChart, ExpenseBarChart, NetBarChart } from "@/components/charts/LazyCharts";
 import { BalanceHero } from "@/components/home/BalanceHero";
 import { BudgetOverviewCard } from "@/components/home/BudgetOverviewCard";
+import { DailyCalendar } from "@/components/home/DailyCalendar";
 import { GoalsPreviewCard } from "@/components/home/GoalsPreviewCard";
 import { RecentActivityCard } from "@/components/home/RecentActivityCard";
 import { StatTiles } from "@/components/home/StatTiles";
@@ -35,6 +37,7 @@ export default function BerandaPage() {
     const totals = monthTotals(state.transactions, key);
     const trend = monthlyTrend(state.transactions, recentMonthKeys(6, new Date(`${key}-01T00:00:00`)));
     const burn = dailyBurn(state.transactions, key);
+    const days = dailySummary(state.transactions, key);
     const expenseDelta = deltaVsPrevious(state.transactions, key, shiftMonth(key, -1), "out");
 
     const now = new Date();
@@ -60,6 +63,7 @@ export default function BerandaPage() {
       totals,
       trend,
       burn,
+      days,
       expenseDelta,
       compareText,
       daysLeft,
@@ -73,6 +77,7 @@ export default function BerandaPage() {
 
   const { privacy, heroMetric, homeChart } = state.settings;
   const banding = homeChart === "banding";
+  const kalender = homeChart === "kalender";
 
   return (
     <div className="space-y-4 lg:space-y-5">
@@ -102,19 +107,25 @@ export default function BerandaPage() {
             privacy={privacy}
           />
 
-          {/* Dua pertanyaan berbeda, satu kartu: "apakah saya belanja terlalu
-              cepat bulan ini" dan "apakah bulan ini memang lebih boros dari
-              biasanya". Yang kedua butuh pembanding, yang pertama tidak. */}
+          {/* Tiga pertanyaan serumpun, satu kartu: "apakah saya belanja terlalu
+              cepat bulan ini", "apakah bulan ini memang lebih boros dari
+              biasanya", dan "hari apa saja uangnya keluar". Digabung supaya
+              Beranda tidak bertambah panjang setiap kali ada sudut pandang
+              baru — pilihannya tersimpan, jadi tiap orang menetap di miliknya. */}
           <Card>
             <CardHeader
-              title={banding ? "Perbandingan Bulanan" : "Laju Pengeluaran"}
+              title={
+                kalender ? "Kalender Harian" : banding ? "Perbandingan Bulanan" : "Laju Pengeluaran"
+              }
               subtitle={
-                banding
-                  ? "Pengeluaran 6 bulan terakhir"
-                  : `Kumulatif ${monthLabel(key, true)} vs laju ideal`
+                kalender
+                  ? "Ketuk tanggal untuk melihat rinciannya"
+                  : banding
+                    ? "Pengeluaran 6 bulan terakhir"
+                    : `Kumulatif ${monthLabel(key, true)} vs laju ideal`
               }
               action={
-                banding ? (
+                kalender ? null : banding ? (
                   <DeltaBadge value={data.expenseDelta} invert />
                 ) : (
                   <span
@@ -138,13 +149,21 @@ export default function BerandaPage() {
                 value={homeChart}
                 onChange={(homeChart) => actions.setSettings({ homeChart })}
                 options={[
-                  { value: "laju", label: "Laju bulan ini" },
-                  { value: "banding", label: "Banding bulan" },
+                  { value: "laju", label: "Laju" },
+                  { value: "banding", label: "Banding" },
+                  { value: "kalender", label: "Kalender" },
                 ]}
                 className="mb-4"
               />
 
-              {banding ? (
+              {kalender ? (
+                <DailyCalendar
+                  days={data.days}
+                  transactions={state.transactions}
+                  monthKey={key}
+                  privacy={privacy}
+                />
+              ) : banding ? (
                 <>
                   <ExpenseBarChart data={data.trend} activeKey={key} privacy={privacy} />
                   <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
