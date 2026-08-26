@@ -20,8 +20,10 @@ Tiga tema bawaan: **Warm** (krem–terakota, minimalis-organik), **Midnight** (i
 - **Angka utama bisa diganti** — ketuk labelnya untuk memilih Saldo likuid, Keluar, Masuk, Sisa (masuk−keluar), atau Sisa anggaran. Dua angka pendamping ikut menyesuaikan supaya tidak ada nominal yang tampil dua kali dalam satu kartu; pilihannya tersimpan
 - **Ring Anggaran vs Realisasi** — donut SVG interaktif; tiap segmen adalah satu kategori, arahkan kursor (atau fokus keyboard) untuk melihat rinciannya di tengah ring
 - Indikator warna dinamis: hijau `<70%`, kuning `70–90%`, merah `>90%`
-- Empat kartu metrik: realisasi, plafon, sisa aman, dan jatah harian — **semuanya bisa diketuk** menuju halaman yang bisa menindaklanjutinya
-- Grafik yang bisa ditukar: **laju pengeluaran kumulatif** vs laju ideal, atau **perbandingan 6 bulan** dengan bulan berjalan disorot dan kalimat pembanding terhadap rata-rata
+- **Bar anggaran** yang menyatukan realisasi dan plafon dalam satu garis — kelebihan pemakaian tetap terbaca, tidak dipatok di 100%
+- Dua kartu metrik: sisa aman dan jatah harian — **semuanya bisa diketuk** menuju halaman yang bisa menindaklanjutinya
+- Satu kartu, tiga sudut pandang yang bisa ditukar: **laju pengeluaran kumulatif** vs laju ideal, **perbandingan 6 bulan** dengan kalimat pembanding terhadap rata-rata, dan **kalender harian**
+- **Kalender harian** — tiap tanggal menampilkan pengeluarannya, warnanya makin pekat makin boros; ketuk tanggal untuk melihat seluruh transaksi hari itu
 - Arus kas 6 bulan dan sisa (surplus/defisit) per bulan
 - Lima aktivitas terkini dan ringkasan target tabungan
 - Tombol **+ Catat Transaksi** membuka bottom sheet: nominal, in/out, kategori, catatan, tanggal

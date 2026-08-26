@@ -163,20 +163,58 @@ export function monthlyTrend(transactions: Transaction[], keys: string[]): Trend
   });
 }
 
-/** Cumulative spend per day for the month — feeds the pacing sparkline. */
-export function dailyBurn(transactions: Transaction[], key: string) {
+export interface DaySummary {
+  /** 1 sampai jumlah hari pada bulan itu. */
+  day: number;
+  /** `YYYY-MM-DD`, dipakai sebagai kunci React dan untuk menyaring transaksi. */
+  iso: string;
+  income: number;
+  expense: number;
+  count: number;
+}
+
+/**
+ * Satu entri per hari dalam sebulan, termasuk hari yang kosong.
+ *
+ * Hari kosong sengaja tetap dikembalikan: kalender harus punya kotak untuk
+ * setiap tanggal, dan grafik laju butuh titik untuk setiap hari supaya garisnya
+ * tidak melompat.
+ */
+export function dailySummary(transactions: Transaction[], key: string): DaySummary[] {
   const [y, m] = key.split("-").map(Number);
   const days = new Date(y, m, 0).getDate();
-  const perDay = new Array<number>(days).fill(0);
+
+  const out: DaySummary[] = Array.from({ length: days }, (_, i) => ({
+    day: i + 1,
+    iso: `${key}-${String(i + 1).padStart(2, "0")}`,
+    income: 0,
+    expense: 0,
+    count: 0,
+  }));
+
   for (const t of inMonth(transactions, key)) {
-    if (t.type !== "out") continue;
     const d = Number(t.date.slice(8, 10));
-    if (d >= 1 && d <= days) perDay[d - 1] += t.amount;
+    if (d < 1 || d > days) continue;
+    const entry = out[d - 1];
+    if (t.type === "in") entry.income += t.amount;
+    else entry.expense += t.amount;
+    entry.count += 1;
   }
+
+  return out;
+}
+
+/**
+ * Cumulative spend per day for the month — feeds the pacing sparkline.
+ *
+ * Dibangun di atas `dailySummary` supaya tidak ada dua tempat yang menghitung
+ * pengeluaran harian dan berpotensi menyimpang satu sama lain.
+ */
+export function dailyBurn(transactions: Transaction[], key: string) {
   let running = 0;
-  return perDay.map((amount, i) => {
-    running += amount;
-    return { day: i + 1, amount, cumulative: running };
+  return dailySummary(transactions, key).map((d) => {
+    running += d.expense;
+    return { day: d.day, amount: d.expense, cumulative: running };
   });
 }
 

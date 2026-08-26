@@ -9,9 +9,10 @@ export type HeroMetric = "saldo" | "keluar" | "masuk" | "sisa" | "anggaran";
  * Grafik yang tampil di kartu tengah Beranda.
  *
  * `laju` menjawab "apakah saya belanja terlalu cepat bulan ini";
- * `banding` menjawab "apakah bulan ini lebih boros dari biasanya".
+ * `banding` menjawab "apakah bulan ini lebih boros dari biasanya";
+ * `kalender` menjawab "hari apa saja saya mengeluarkan uang, dan berapa".
  */
-export type HomeChart = "laju" | "banding";
+export type HomeChart = "laju" | "banding" | "kalender";
 
 export interface Transaction {
   id: string;
