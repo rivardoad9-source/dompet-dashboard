@@ -3,12 +3,12 @@
 import {
   Eye,
   EyeOff,
+  Contrast,
   Moon,
   Plus,
   Search,
   Settings,
   Sparkles,
-  Sun,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -43,9 +43,9 @@ function greeting(hydrated: boolean): string {
  * cukup menambah satu entri — ikon dan labelnya ikut sendiri.
  */
 const THEME_CYCLE: Array<{ id: ThemeName; next: ThemeName; icon: LucideIcon; label: string }> = [
-  { id: "warm", next: "midnight", icon: Moon, label: "Ganti ke tema Midnight" },
+  { id: "noir", next: "midnight", icon: Moon, label: "Ganti ke tema Midnight" },
   { id: "midnight", next: "glass", icon: Sparkles, label: "Ganti ke tema Glass" },
-  { id: "glass", next: "warm", icon: Sun, label: "Ganti ke tema Warm" },
+  { id: "glass", next: "noir", icon: Contrast, label: "Ganti ke tema Noir" },
 ];
 
 export function ThemeToggle({ className }: { className?: string }) {

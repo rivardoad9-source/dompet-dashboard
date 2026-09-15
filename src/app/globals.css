@@ -6,64 +6,68 @@
    See CUSTOMIZATION.md for a walkthrough.
    ========================================================================== */
 
-/* --- Theme: Warm (default, per PRD "minimalis-organik / warm earthy tone") --- */
+/* --- Theme: Noir (default — hitam pekat, aksen lime) -----------------------
+   Satu warna keras di atas permukaan gelap: lime dipakai hanya untuk hal yang
+   memang perlu ditekan (tombol utama, tab aktif, deret data pertama). Sisanya
+   abu-abu bertingkat, jadi angka yang penting selalu jadi benda paling terang
+   di layar. */
 :root {
   /* Surfaces */
-  --bg: #fdfbf7;
-  --bg-subtle: #f4ede4;
-  --surface: #ffffff;
-  --surface-2: #faf6f0;
-  --surface-3: #f4ede4;
+  --bg: #000000;
+  --bg-subtle: #0b0b0b;
+  --surface: #121212;
+  --surface-2: #1c1c1c;
+  --surface-3: #272727;
 
   /* Ink */
-  --ink: #2c2523;
-  --ink-muted: #6b5f58;
-  --ink-faint: #9a8b81;
-  --line: #ebe0d3;
-  --line-strong: #ddcdba;
+  --ink: #f5f5f5;
+  --ink-muted: #a3a3a3;
+  --ink-faint: #8f8f8f;
+  --line: #333333;
+  --line-strong: #6b6b6b;
 
-  /* Brand — terracotta / earth */
-  --brand: #8c6d58;
-  --brand-strong: #6f5544;
-  --brand-soft: #f1e6da;
-  --brand-tint: #e3d2c2;
-  --on-brand: #ffffff;
+  /* Brand — lime */
+  --brand: #c8f24e;
+  --brand-strong: #d8fb70;
+  --brand-soft: #1e2708;
+  --brand-tint: #2d3b0d;
+  --on-brand: #101405;
 
   /* Secondary accent (charts, gradients) */
-  --accent: #a8846a;
-  --accent-soft: #f3e8dd;
+  --accent: #7dd3fc;
+  --accent-soft: #0c2231;
 
   /* Semantic */
-  --success: #2e7d32;
-  --success-soft: #e3f0e4;
-  --warning: #b47216;
-  --warning-soft: #f8ecd8;
-  --danger: #c62828;
-  --danger-soft: #f8e3e3;
-  --on-danger: #ffffff;
+  --success: #4ade80;
+  --success-soft: #0f2a1a;
+  --warning: #fbbf24;
+  --warning-soft: #2e2208;
+  --danger: #fb7185;
+  --danger-soft: #331017;
+  --on-danger: #2b0a11;
 
   /* Hero gradient (balance card) */
-  --hero-from: #4b3a30;
-  --hero-to: #8c6d58;
-  --hero-ink: #fdfbf7;
-  --hero-ink-muted: #ddcbbc;
+  --hero-from: #1f1f1f;
+  --hero-to: #070707;
+  --hero-ink: #fafafa;
+  --hero-ink-muted: #a8a8a8;
 
   /* Effects */
-  --ring: #8c6d58;
-  --shadow-sm: 0 1px 2px rgba(64, 45, 33, 0.05);
-  --shadow-md: 0 4px 16px -4px rgba(64, 45, 33, 0.1), 0 1px 3px rgba(64, 45, 33, 0.05);
-  --shadow-lg: 0 18px 44px -18px rgba(64, 45, 33, 0.28);
-  --sheet-scrim: rgba(44, 37, 35, 0.42);
+  --ring: #c8f24e;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 18px -4px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 20px 50px -20px rgba(0, 0, 0, 0.85);
+  --sheet-scrim: rgba(0, 0, 0, 0.72);
 
-  /* Categorical chart palette — distinct hues, AA-safe on light surfaces */
-  --cat-1: #8c6d58;
-  --cat-2: #b07d4f;
-  --cat-3: #7a8c5a;
-  --cat-4: #6f8ca0;
-  --cat-5: #a1698c;
-  --cat-6: #c2874a;
-  --cat-7: #5f8f7d;
-  --cat-8: #94795f;
+  /* Categorical chart palette — semuanya cukup terang di atas hitam */
+  --cat-1: #c8f24e;
+  --cat-2: #7dd3fc;
+  --cat-3: #f0abfc;
+  --cat-4: #fbbf24;
+  --cat-5: #5eead4;
+  --cat-6: #fda4af;
+  --cat-7: #a5b4fc;
+  --cat-8: #d4d4d4;
 }
 
 /* --- Theme: Midnight (deep indigo admin, warm terracotta accent) --- */
@@ -393,6 +397,25 @@ body {
 
 .dp-hero {
   background-image: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   Noir — pendar lime di sudut kartu saldo.
+
+   Di tema terang, kartu saldo menonjol karena gelap sendirian. Di tema hitam
+   trik itu hilang: gradien abu-abu di atas latar hitam nyaris tidak terbaca
+   sebagai kartu. Jadi pemisahnya dipindah ke warna — satu pendar lime di sudut
+   kanan atas, arah yang sama dengan gradien dasarnya.
+
+   Selektornya ditulis sebagai "bukan midnight, bukan glass", bukan
+   `[data-theme="noir"]`, karena Noir adalah tema fallback: tokennya ada di
+   `:root`. Perangkat yang masih menyimpan nama tema lama ikut kebagian
+   tampilan yang benar, sama seperti tokennya.
+   -------------------------------------------------------------------------- */
+html:not([data-theme="midnight"]):not([data-theme="glass"]) .dp-hero {
+  background-image:
+    radial-gradient(26rem 18rem at 108% -25%, rgba(200, 242, 78, 0.22), transparent 62%),
+    linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
 }
 
 /* Respects the notch / home indicator on installed PWAs */

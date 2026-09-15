@@ -288,7 +288,7 @@ export default function PengaturanPage() {
                 value={settings.theme}
                 onChange={(theme) => actions.setSettings({ theme })}
                 options={[
-                  { value: "warm", label: "Warm" },
+                  { value: "noir", label: "Noir" },
                   { value: "midnight", label: "Midnight" },
                   { value: "glass", label: "Glass" },
                 ]}

@@ -12,8 +12,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // ---- Brand ---------------------------------------------------------------
-const BRAND = [0x8c, 0x6d, 0x58]; // --brand
-const CREAM = [0xfd, 0xfb, 0xf7]; // --bg
+const BRAND = [0xc8, 0xf2, 0x4e]; // --brand (lime)
+const INK = [0x10, 0x14, 0x05]; // --on-brand
 // --------------------------------------------------------------------------
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "icons");
@@ -116,7 +116,7 @@ function renderIcon(size, { inset = 0, squircle = 0.22 } = {}) {
     buf,
     size,
     (x, y) => sdRoundRect(x, y, c, pad + box * 0.365, box * 0.235, box * 0.075, box * 0.05),
-    CREAM,
+    INK,
     0.55,
   );
 
@@ -125,7 +125,7 @@ function renderIcon(size, { inset = 0, squircle = 0.22 } = {}) {
     buf,
     size,
     (x, y) => sdRoundRect(x, y, c, pad + box * 0.565, box * 0.29, box * 0.185, box * 0.075),
-    CREAM,
+    INK,
   );
 
   // Clasp
@@ -143,8 +143,8 @@ function renderIcon(size, { inset = 0, squircle = 0.22 } = {}) {
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <rect width="100" height="100" rx="22" fill="rgb(${BRAND.join(",")})"/>
-  <rect x="26.5" y="29" width="47" height="15" rx="5" fill="rgb(${CREAM.join(",")})" opacity="0.55"/>
-  <rect x="21" y="38" width="58" height="37" rx="7.5" fill="rgb(${CREAM.join(",")})"/>
+  <rect x="26.5" y="29" width="47" height="15" rx="5" fill="rgb(${INK.join(",")})" opacity="0.55"/>
+  <rect x="21" y="38" width="58" height="37" rx="7.5" fill="rgb(${INK.join(",")})"/>
   <circle cx="70.5" cy="56.5" r="5.5" fill="rgb(${BRAND.join(",")})"/>
 </svg>
 `;
