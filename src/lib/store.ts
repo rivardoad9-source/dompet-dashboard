@@ -109,7 +109,21 @@ function reconcile(raw: unknown): AppState {
     settings: { ...base.settings, ...(parsed.settings ?? {}) },
   };
 
-  return sanitizeAmounts(migrateIds(state));
+  return sanitizeAmounts(migrateIds(migrateTheme(state)));
+}
+
+/**
+ * Tema `warm` (krem–terakota) sudah tidak ada, digantikan `noir`.
+ *
+ * Nama tema tersimpan di localStorage perangkat, jadi tanpa pemetaan ini
+ * pengguna lama membuka aplikasi dengan nilai yang tidak dikenal siapa pun:
+ * CSS-nya memang jatuh ke `:root` (yang sekarang Noir), tapi pemilih tema di
+ * Pengaturan tampil kosong dan tombol putar tema mulai dari awal daftar.
+ */
+function migrateTheme(state: AppState): AppState {
+  const theme = state.settings.theme as string;
+  if (theme !== "warm") return state;
+  return { ...state, settings: { ...state.settings, theme: "noir" } };
 }
 
 /**
@@ -235,7 +249,7 @@ export function hydrateStore() {
 }
 
 const THEME_COLORS: Record<string, string> = {
-  warm: "#fdfbf7",
+  noir: "#000000",
   midnight: "#0d1230",
   glass: "#0b1024",
 };
@@ -245,7 +259,7 @@ export function applyTheme(theme: Settings["theme"]) {
   document.documentElement.dataset.theme = theme;
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", THEME_COLORS[theme] ?? THEME_COLORS.warm);
+    ?.setAttribute("content", THEME_COLORS[theme] ?? THEME_COLORS.noir);
 }
 
 /* ==========================================================================

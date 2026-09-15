@@ -9,7 +9,7 @@ Satu basis kode, dua wajah:
 | `< 1024px` | Aplikasi mobile lebar maksimal **430px**, terpusat, dengan bottom navigation 4 tab + tombol aksi cepat |
 | `≥ 1024px` | Admin dashboard penuh: sidebar tetap, topbar dengan pencarian, dan grid kartu 12 kolom |
 
-Tiga tema bawaan: **Warm** (krem–terakota, minimalis-organik), **Midnight** (indigo pekat dengan aksen terakota), dan **Glass** (panel buram bergaya iOS di atas latar bergradien).
+Tiga tema bawaan, semuanya gelap: **Noir** (hitam pekat dengan aksen lime — tema bawaan), **Midnight** (indigo pekat dengan aksen terakota), dan **Glass** (panel buram bergaya iOS di atas latar bergradien).
 
 ---
 
@@ -220,7 +220,7 @@ Semua data disimpan di `localStorage` dengan kunci `dompet.state.v1` sebagai sat
   "transactions": [ /* … */ ],
   "budgets":      [ /* … */ ],
   "goals":        [ /* … */ ],
-  "settings":     { "name": "…", "theme": "warm", "privacy": false }
+  "settings":     { "name": "…", "theme": "noir", "privacy": false }
 }
 ```
 

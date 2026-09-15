@@ -15,17 +15,17 @@ Sisanya — komponen, halaman, grafik — membaca dari keempat file itu. Tidak a
 
 ## 1. Mengganti warna brand
 
-Buka `src/app/globals.css`. Di paling atas ada dua blok token: `:root` (tema **Warm**) dan `[data-theme="midnight"]` (tema **Midnight**).
+Buka `src/app/globals.css`. Di paling atas ada tiga blok token: `:root` (tema **Noir**, sekaligus fallback), `[data-theme="midnight"]` (tema **Midnight**), dan `[data-theme="glass"]` (tema **Glass**).
 
 Untuk rebrand cepat, ubah lima baris ini di `:root`:
 
 ```css
 :root {
-  --brand:        #8c6d58;  /* warna utama: tombol, tab aktif, ring */
-  --brand-strong: #6f5544;  /* varian hover, harus lebih gelap */
-  --brand-soft:   #f1e6da;  /* latar lembut: badge, chip, avatar */
-  --brand-tint:   #e3d2c2;  /* hover di atas brand-soft */
-  --on-brand:     #ffffff;  /* teks/ikon DI ATAS --brand */
+  --brand:        #c8f24e;  /* warna utama: tombol, tab aktif, ring */
+  --brand-strong: #d8fb70;  /* varian hover — di tema gelap justru lebih terang */
+  --brand-soft:   #1e2708;  /* latar lembut: badge, chip, avatar */
+  --brand-tint:   #2d3b0d;  /* hover di atas brand-soft */
+  --on-brand:     #101405;  /* teks/ikon DI ATAS --brand */
 }
 ```
 
@@ -34,10 +34,10 @@ Untuk rebrand cepat, ubah lima baris ini di `:root`:
 Kartu saldo besar di Beranda memakai gradasi terpisah:
 
 ```css
---hero-from:      #4b3a30;  /* gradasi awal (kiri atas) */
---hero-to:        #8c6d58;  /* gradasi akhir (kanan bawah) */
---hero-ink:       #fdfbf7;  /* teks di atas gradasi */
---hero-ink-muted: #ddcbbc;  /* label sekunder di atas gradasi */
+--hero-from:      #1f1f1f;  /* gradasi awal (kiri atas) */
+--hero-to:        #070707;  /* gradasi akhir (kanan bawah) */
+--hero-ink:       #fafafa;  /* teks di atas gradasi */
+--hero-ink-muted: #a8a8a8;  /* label sekunder di atas gradasi */
 ```
 
 Setelah warna brand berubah, regenerasi ikon PWA supaya ikut cocok:

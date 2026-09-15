@@ -9,8 +9,8 @@
   "id": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#fdfbf7",
-  "theme_color": "#fdfbf7",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "categories": ["finance", "productivity", "lifestyle"],
   "icons": [
     {
