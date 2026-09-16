@@ -6,6 +6,7 @@ import { monthKey, monthLabel, recentMonthKeys, shiftMonth } from "@/lib/format"
 import { useCurrentMonth } from "@/lib/hooks";
 import {
   budgetSummary,
+  categoryBreakdown,
   dailyBurn,
   dailySummary,
   deltaVsPrevious,
@@ -37,6 +38,7 @@ export default function BerandaPage() {
     const totals = monthTotals(state.transactions, key);
     const trend = monthlyTrend(state.transactions, recentMonthKeys(6, new Date(`${key}-01T00:00:00`)));
     const burn = dailyBurn(state.transactions, key);
+    const breakdown = categoryBreakdown(state.transactions, key);
     const days = dailySummary(state.transactions, key);
     const expenseDelta = deltaVsPrevious(state.transactions, key, shiftMonth(key, -1), "out");
 
@@ -63,6 +65,7 @@ export default function BerandaPage() {
       totals,
       trend,
       burn,
+      breakdown,
       days,
       expenseDelta,
       compareText,
@@ -81,13 +84,6 @@ export default function BerandaPage() {
 
   return (
     <div className="space-y-4 lg:space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold text-ink-muted">
-          Ringkasan <span className="text-ink">{monthLabel(key)}</span>
-        </p>
-        <MonthPicker value={key} onChange={setKey} compact />
-      </div>
-
       {/* --- Saldo + metrik + ring --- */}
       <div className="grid grid-cols-12 gap-4 lg:gap-5">
         <div className="col-span-12 space-y-4 lg:space-y-5 xl:col-span-8">
@@ -96,10 +92,23 @@ export default function BerandaPage() {
             saved={data.saved}
             totals={data.totals}
             summary={data.summary}
+            breakdown={data.breakdown}
             metric={heroMetric}
             monthKey={key}
             privacy={privacy}
           />
+          {/* Pemilih bulan duduk tepat di bawah kartu saldo, bukan di atasnya.
+              Kartu itu harus menempel di bawah topbar supaya terbaca sebagai
+              satu bidang hitam yang menutup layar, dan apa pun yang diletakkan
+              di atasnya merusak efek itu. Kontrolnya tetap terlihat tanpa
+              menggulir, dan tetap mengatur seluruh angka di halaman ini. */}
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold text-ink-muted">
+              Ringkasan <span className="text-ink">{monthLabel(key)}</span>
+            </p>
+            <MonthPicker value={key} onChange={setKey} compact />
+          </div>
+
           <StatTiles
             summary={data.summary}
             expenseDelta={data.expenseDelta}
