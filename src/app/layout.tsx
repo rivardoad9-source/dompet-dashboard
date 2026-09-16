@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   // bawaan sekarang gelap, dan `applyTheme()` menimpa isi meta ini begitu tema
   // tersimpan dibaca. Dua tag `theme-color` justru membuat penimpaan itu meleset
   // ke tag yang salah, karena `querySelector` hanya mengambil yang pertama.
-  themeColor: "#000000",
+  themeColor: "#ffffff",
 };
 
 /**
@@ -49,19 +49,19 @@ export const viewport: Viewport = {
  * palette. It mutates `data-theme` on <html>, which is why the element below
  * carries `suppressHydrationWarning`.
  */
-const THEME_BOOTSTRAP = `(function(){try{var s=localStorage.getItem("dompet.state.v1");var t=s?JSON.parse(s).settings.theme:null;if(!t||t==="warm"){t="noir";}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="noir";}})();`;
+const THEME_BOOTSTRAP = `(function(){try{var s=localStorage.getItem("dompet.state.v1");var t=s?JSON.parse(s).settings.theme:null;if(!t||t==="warm"||t==="noir"){t="mono";}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="mono";}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
-      data-theme="noir"
+      data-theme="mono"
       suppressHydrationWarning
       className={`${jakarta.variable} h-full antialiased`}
     >
       <head>
         {/* Runs before first paint so a Midnight or Glass user never sees a flash
-            of Noir. `suppressHydrationWarning`: React must not reconcile a script
+            of Mono. `suppressHydrationWarning`: React must not reconcile a script
             whose side effect (mutating data-theme) it did not perform itself. */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>

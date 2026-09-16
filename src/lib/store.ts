@@ -6,7 +6,7 @@ import { clearUndo, readUndo, requestPersistence, saveUndo } from "./durability"
 import { clampAmount } from "./format";
 import { isUuid, newId } from "./ids";
 import { buildSeedState, emptyState } from "./seed";
-import type { AppState, Budget, Deposit, Goal, Settings, Transaction } from "./types";
+import type { AppState, Budget, Deposit, Goal, Settings, ThemeName, Transaction } from "./types";
 
 /**
  * Satu-satunya sumber data aplikasi.
@@ -113,17 +113,20 @@ function reconcile(raw: unknown): AppState {
 }
 
 /**
- * Tema `warm` (krem–terakota) sudah tidak ada, digantikan `noir`.
+ * Nama tema yang sudah tidak ada lagi, dipetakan ke penggantinya.
  *
+ * `warm` (krem–terakota) dan `noir` (hitam penuh) keduanya digantikan `mono`.
  * Nama tema tersimpan di localStorage perangkat, jadi tanpa pemetaan ini
  * pengguna lama membuka aplikasi dengan nilai yang tidak dikenal siapa pun:
- * CSS-nya memang jatuh ke `:root` (yang sekarang Noir), tapi pemilih tema di
+ * CSS-nya memang jatuh ke `:root` (yang sekarang Mono), tapi pemilih tema di
  * Pengaturan tampil kosong dan tombol putar tema mulai dari awal daftar.
  */
+const RETIRED_THEMES: Record<string, ThemeName> = { warm: "mono", noir: "mono" };
+
 function migrateTheme(state: AppState): AppState {
-  const theme = state.settings.theme as string;
-  if (theme !== "warm") return state;
-  return { ...state, settings: { ...state.settings, theme: "noir" } };
+  const next = RETIRED_THEMES[state.settings.theme as string];
+  if (!next) return state;
+  return { ...state, settings: { ...state.settings, theme: next } };
 }
 
 /**
@@ -249,7 +252,7 @@ export function hydrateStore() {
 }
 
 const THEME_COLORS: Record<string, string> = {
-  noir: "#000000",
+  mono: "#ffffff",
   midnight: "#0d1230",
   glass: "#0b1024",
 };
@@ -259,7 +262,7 @@ export function applyTheme(theme: Settings["theme"]) {
   document.documentElement.dataset.theme = theme;
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", THEME_COLORS[theme] ?? THEME_COLORS.noir);
+    ?.setAttribute("content", THEME_COLORS[theme] ?? THEME_COLORS.mono);
 }
 
 /* ==========================================================================

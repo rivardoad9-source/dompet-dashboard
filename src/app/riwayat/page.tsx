@@ -212,7 +212,7 @@ function SummaryChip({
   colorVar: string;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-surface px-3 py-2.5 text-center">
+    <div className="dp-panel rounded-xl border border-line bg-surface px-3 py-2.5 text-center">
       <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">{label}</p>
       <p
         className="mt-0.5 truncate text-sm font-extrabold tabular-nums"

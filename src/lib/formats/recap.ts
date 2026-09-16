@@ -12,7 +12,7 @@ import type { BudgetSummary, CategorySlice, MonthTotals } from "../stats";
  * thumbnail, dan tanpa satu pun elemen antarmuka.
  *
  * Warnanya dibaca dari CSS custom property yang sedang aktif, jadi gambar ini
- * otomatis mengikuti tema Noir atau Midnight — dan ikut berubah kalau pembeli
+ * otomatis mengikuti tema Mono atau Midnight — dan ikut berubah kalau pembeli
  * mengganti warna brand, tanpa menyentuh file ini.
  */
 
@@ -23,6 +23,22 @@ function cssVar(name: string, fallback: string): string {
   if (typeof document === "undefined") return fallback;
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return value || fallback;
+}
+
+/**
+ * Warna untuk bidang gelap kartu ini.
+ *
+ * Kartu rekap selalu digambar di atas ground gelap, apa pun temanya — itu yang
+ * membuat palet kategori dan aksen brand-nya terbaca. Tapi canvas menggambar
+ * dari luar DOM, jadi ia tidak bisa ikut mewarisi pembalikan token yang dipakai
+ * kartu-kartu di layar.
+ *
+ * Tema yang halamannya terang menyediakan `--panel-*` khusus untuk itu. Tema
+ * yang memang sudah gelap seluruhnya tidak perlu, jadi pembacaannya jatuh ke
+ * token biasa dan tidak ada yang berubah untuk mereka.
+ */
+function panelVar(name: string, fallback: string): string {
+  return cssVar(`--panel-${name}`, "") || cssVar(`--${name}`, fallback);
 }
 
 function fontStack(): string {
@@ -63,15 +79,15 @@ export async function buildRecapImage(input: RecapInput): Promise<Blob> {
   if (!ctx) throw new Error("Canvas tidak didukung di browser ini.");
 
   const font = fontStack();
-  const bg = cssVar("--bg", "#000000");
-  const surface = cssVar("--surface", "#121212");
-  const ink = cssVar("--ink", "#f5f5f5");
-  const inkMuted = cssVar("--ink-muted", "#a3a3a3");
-  const inkFaint = cssVar("--ink-faint", "#8f8f8f");
-  const line = cssVar("--line", "#333333");
+  const bg = panelVar("bg", "#0b0b0b");
+  const surface = panelVar("surface", "#141414");
+  const ink = panelVar("ink", "#fafafa");
+  const inkMuted = panelVar("ink-muted", "#a3a3a3");
+  const inkFaint = panelVar("ink-faint", "#8f8f8f");
+  const line = panelVar("line", "#303030");
   const brand = cssVar("--brand", "#c8f24e");
-  const heroFrom = cssVar("--hero-from", "#1f1f1f");
-  const heroTo = cssVar("--hero-to", "#070707");
+  const heroFrom = cssVar("--hero-from", "#1c1c1c");
+  const heroTo = cssVar("--hero-to", "#050505");
   const heroInk = cssVar("--hero-ink", "#fafafa");
   const success = cssVar("--success", "#4ade80");
   const statusColor = cssVar(STATUS_META[input.summary.status].colorVar, brand);
@@ -133,7 +149,7 @@ export async function buildRecapImage(input: RecapInput): Promise<Blob> {
 
   ctx.lineCap = "butt";
   ctx.lineWidth = thickness;
-  ctx.strokeStyle = cssVar("--surface-3", "#272727");
+  ctx.strokeStyle = panelVar("surface-3", "#2b2b2b");
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.stroke();
