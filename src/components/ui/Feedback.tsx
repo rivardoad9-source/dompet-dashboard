@@ -13,7 +13,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function CardSkeleton({ lines = 3, className }: { lines?: number; className?: string }) {
   return (
-    <div className={cn("rounded-card border border-line bg-surface p-5", className)}>
+    <div className={cn("dp-panel rounded-card border border-line bg-surface p-5", className)}>
       <Skeleton className="h-4 w-1/3" />
       <div className="mt-4 space-y-2.5">
         {Array.from({ length: lines }).map((_, i) => (

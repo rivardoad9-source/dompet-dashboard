@@ -43,9 +43,9 @@ function greeting(hydrated: boolean): string {
  * cukup menambah satu entri — ikon dan labelnya ikut sendiri.
  */
 const THEME_CYCLE: Array<{ id: ThemeName; next: ThemeName; icon: LucideIcon; label: string }> = [
-  { id: "noir", next: "midnight", icon: Moon, label: "Ganti ke tema Midnight" },
+  { id: "mono", next: "midnight", icon: Moon, label: "Ganti ke tema Midnight" },
   { id: "midnight", next: "glass", icon: Sparkles, label: "Ganti ke tema Glass" },
-  { id: "glass", next: "noir", icon: Contrast, label: "Ganti ke tema Noir" },
+  { id: "glass", next: "mono", icon: Contrast, label: "Ganti ke tema Mono" },
 ];
 
 export function ThemeToggle({ className }: { className?: string }) {

@@ -6,38 +6,58 @@
    See CUSTOMIZATION.md for a walkthrough.
    ========================================================================== */
 
-/* --- Theme: Noir (default — hitam pekat, aksen lime) -----------------------
-   Satu warna keras di atas permukaan gelap: lime dipakai hanya untuk hal yang
-   memang perlu ditekan (tombol utama, tab aktif, deret data pertama). Sisanya
-   abu-abu bertingkat, jadi angka yang penting selalu jadi benda paling terang
-   di layar. */
+/* --- Theme: Mono (default — halaman putih, panel hitam, aksen lime) ---------
+   Temanya dua lapis, dan itu disengaja.
+
+   Lapis pertama (`:root`) adalah halaman: putih, tinta hitam, kontrol abu-abu
+   muda. Lapis kedua ada di bagian Panel jauh di bawah — setiap kartu, sheet,
+   toast, dan bottom nav menulis ulang token yang sama menjadi versi gelap di
+   dalam subtree-nya sendiri. Karena custom property diwariskan, `text-ink` yang
+   sama menghasilkan hitam di atas halaman dan putih di dalam kartu tanpa satu
+   pun komponen perlu tahu ia sedang berada di mana.
+
+   Konsekuensi yang perlu diketahui sebelum mengubah angka di bawah: warna
+   semantik (`--success`, `--warning`, `--danger`) dan seluruh palet `--cat-*`
+   disetel untuk latar gelap, bukan untuk putih. Itu bukan kelalaian — di
+   aplikasi ini praktis semua angka dan grafik hidup di dalam panel. Yang
+   benar-benar tampil di atas putih hanya judul halaman, pemilih bulan, dan
+   satu dua tombol sekunder. */
 :root {
-  /* Surfaces */
-  --bg: #000000;
-  --bg-subtle: #0b0b0b;
-  --surface: #121212;
-  --surface-2: #1c1c1c;
-  --surface-3: #272727;
+  /* Memberi tahu browser cara menggambar kontrol bawaannya — pemilih tanggal,
+     scrollbar, isian otomatis. Tanpa ini browser selalu menganggap terang, dan
+     ikon kalender di field tanggal digambar hitam di atas panel hitam. */
+  color-scheme: light;
+
+  /* Surfaces — halaman dan kontrol yang berdiri di atasnya */
+  --bg: #ffffff;
+  --bg-subtle: #f6f6f7;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #e6e6e8;
 
   /* Ink */
-  --ink: #f5f5f5;
-  --ink-muted: #a3a3a3;
-  --ink-faint: #8f8f8f;
-  --line: #333333;
-  --line-strong: #6b6b6b;
+  --ink: #0a0a0a;
+  --ink-muted: #52525b;
+  --ink-faint: #6b6b73;
+  --line: #d9d9de;
+  --line-strong: #8e8e96;
 
-  /* Brand — lime */
+  /* Brand — lime.
+     `--brand-soft` dan `--brand-tint` sengaja gelap, bukan lime pucat. Pasangan
+     `bg-brand-soft text-brand` dipakai di atas halaman putih sekaligus di dalam
+     kartu hitam; lime di atas lime pucat tidak terbaca di keduanya, lime di atas
+     keping gelap terbaca di keduanya. */
   --brand: #c8f24e;
-  --brand-strong: #d8fb70;
-  --brand-soft: #1e2708;
-  --brand-tint: #2d3b0d;
+  --brand-strong: #b6e63c;
+  --brand-soft: #1b2209;
+  --brand-tint: #2a350d;
   --on-brand: #101405;
 
   /* Secondary accent (charts, gradients) */
   --accent: #7dd3fc;
   --accent-soft: #0c2231;
 
-  /* Semantic */
+  /* Semantic — disetel untuk panel gelap, lihat catatan di atas */
   --success: #4ade80;
   --success-soft: #0f2a1a;
   --warning: #fbbf24;
@@ -47,19 +67,34 @@
   --on-danger: #2b0a11;
 
   /* Hero gradient (balance card) */
-  --hero-from: #1f1f1f;
-  --hero-to: #070707;
+  --hero-from: #1c1c1c;
+  --hero-to: #050505;
   --hero-ink: #fafafa;
   --hero-ink-muted: #a8a8a8;
 
   /* Effects */
-  --ring: #c8f24e;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 4px 18px -4px rgba(0, 0, 0, 0.7);
-  --shadow-lg: 0 20px 50px -20px rgba(0, 0, 0, 0.85);
-  --sheet-scrim: rgba(0, 0, 0, 0.72);
+  --ring: #0a0a0a;
+  --shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.06);
+  --shadow-md: 0 4px 16px -4px rgba(9, 9, 11, 0.12), 0 1px 3px rgba(9, 9, 11, 0.06);
+  --shadow-lg: 0 18px 44px -18px rgba(9, 9, 11, 0.32);
+  --sheet-scrim: rgba(9, 9, 11, 0.5);
 
-  /* Categorical chart palette — semuanya cukup terang di atas hitam */
+  /* Panel — satu sumber kebenaran untuk lapis gelap.
+     Aturan `.dp-card` di bagian Utilities meng-alias token ini, dan
+     `lib/formats/recap.ts` membacanya untuk menggambar kartu rekap PNG. Kartu
+     itu digambar ke canvas dari luar DOM panel mana pun, jadi tanpa token
+     bernama ia akan mewarisi halaman putih dan kehilangan seluruh paletnya. */
+  --panel-bg: #0b0b0b;
+  --panel-surface: #141414;
+  --panel-surface-2: #1f1f1f;
+  --panel-surface-3: #2b2b2b;
+  --panel-ink: #fafafa;
+  --panel-ink-muted: #a3a3a3;
+  --panel-ink-faint: #8f8f8f;
+  --panel-line: #303030;
+  --panel-line-strong: #6b6b6b;
+
+  /* Categorical chart palette — grafiknya selalu di dalam panel gelap */
   --cat-1: #c8f24e;
   --cat-2: #7dd3fc;
   --cat-3: #f0abfc;
@@ -72,6 +107,8 @@
 
 /* --- Theme: Midnight (deep indigo admin, warm terracotta accent) --- */
 [data-theme="midnight"] {
+  color-scheme: dark;
+
   --bg: #0d1230;
   --bg-subtle: #131a3c;
   --surface: #161e45;
@@ -127,6 +164,8 @@
    Utilities di bawah, karena `backdrop-filter` bukan warna dan tidak bisa
    dititipkan ke token. */
 [data-theme="glass"] {
+  color-scheme: dark;
+
   --bg: #0b1024;
   --bg-subtle: rgba(14, 19, 46, 0.72);
   /* Tint gelap beropasitas tinggi, bukan putih tipis. Panel kaca tetap
@@ -400,22 +439,69 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Noir — pendar lime di sudut kartu saldo.
+   Mono — lapis kedua: panel hitam di atas halaman putih.
 
-   Di tema terang, kartu saldo menonjol karena gelap sendirian. Di tema hitam
-   trik itu hilang: gradien abu-abu di atas latar hitam nyaris tidak terbaca
-   sebagai kartu. Jadi pemisahnya dipindah ke warna — satu pendar lime di sudut
-   kanan atas, arah yang sama dengan gradien dasarnya.
+   Di sinilah tema ini benar-benar terjadi. Setiap elemen yang mengecat
+   `--surface` sebagai bidang besar — kartu, bottom sheet, toast, bottom nav —
+   menulis ulang token halaman menjadi versi gelap. Elemen itu mengecat dirinya
+   sendiri dengan `--surface` yang baru, dan semua anaknya mewarisinya, jadi
+   `text-ink`, `border-line`, dan `bg-surface-2` yang sama otomatis berbalik
+   tanpa satu pun komponen menyebut warna.
 
-   Selektornya ditulis sebagai "bukan midnight, bukan glass", bukan
-   `[data-theme="noir"]`, karena Noir adalah tema fallback: tokennya ada di
-   `:root`. Perangkat yang masih menyimpan nama tema lama ikut kebagian
-   tampilan yang benar, sama seperti tokennya.
+   Yang TIDAK ikut gelap: topbar, sidebar, pemilih bulan, dan tombol sekunder
+   yang berdiri langsung di atas halaman. Itu memang yang membuat kartunya
+   terbaca sebagai blok hitam, bukan sebagai latar.
+
+   Selektornya ditulis sebagai "bukan midnight, bukan glass" karena Mono adalah
+   tema fallback: tokennya ada di `:root`. Kedua tema lain sudah gelap
+   seluruhnya dan tidak butuh pembalikan ini.
+   -------------------------------------------------------------------------- */
+html:not([data-theme="midnight"]):not([data-theme="glass"])
+  :is(.dp-card, .dp-sheet, .dp-hero, .dp-panel) {
+  --surface: var(--panel-surface);
+  --surface-2: var(--panel-surface-2);
+  --surface-3: var(--panel-surface-3);
+
+  --ink: var(--panel-ink);
+  --ink-muted: var(--panel-ink-muted);
+  --ink-faint: var(--panel-ink-faint);
+  --line: var(--panel-line);
+  --line-strong: var(--panel-line-strong);
+
+  /* Cincin fokus ikut berbalik: hitam tidak terlihat di atas panel hitam. */
+  --ring: #c8f24e;
+
+  /* Kontrol bawaan browser di dalam panel ikut gelap — inilah yang membuat
+     ikon pemilih tanggal terbaca di atas field hitam. */
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   Mono — pendar lime di sudut kartu saldo.
+
+   Kartu saldo dan halaman sama-sama memakai gradasi hitam, jadi di layar lebar
+   ia bisa terbaca sebagai bidang datar tanpa tepi. Pendar lime di sudut kanan
+   atas memberinya arah, searah dengan gradasi dasarnya.
    -------------------------------------------------------------------------- */
 html:not([data-theme="midnight"]):not([data-theme="glass"]) .dp-hero {
   background-image:
     radial-gradient(26rem 18rem at 108% -25%, rgba(200, 242, 78, 0.22), transparent 62%),
     linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   Mono — cincin fokus pada input.
+
+   Input di aplikasi ini memakai `focus:outline-none` dan mengandalkan warna
+   tepinya sendiri sebagai penanda fokus. Di tema gelap itu cukup, tapi di atas
+   halaman putih tepi lime hanya mencapai rasio 1,4:1 terhadap putih — praktis
+   tidak terlihat. Jadi outline-nya dikembalikan, dengan selektor yang cukup
+   spesifik untuk mengalahkan `focus:outline-none`.
+   -------------------------------------------------------------------------- */
+html:not([data-theme="midnight"]):not([data-theme="glass"])
+  :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
 }
 
 /* Respects the notch / home indicator on installed PWAs */

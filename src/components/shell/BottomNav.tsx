@@ -47,7 +47,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigasi utama"
-      className="dp-safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden"
+      className="dp-panel dp-safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden"
     >
       <div className="mx-auto flex max-w-app items-center gap-1 px-2 py-1.5">
         {left.map((i) => renderTab(i.href, i.label, i.icon))}

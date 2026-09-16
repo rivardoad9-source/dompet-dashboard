@@ -1,6 +1,6 @@
 export type TxType = "in" | "out";
 
-export type ThemeName = "noir" | "midnight" | "glass";
+export type ThemeName = "mono" | "midnight" | "glass";
 
 /** Angka besar yang disorot di kartu utama Beranda. Tabelnya di `hero-metrics.ts`. */
 export type HeroMetric = "saldo" | "keluar" | "masuk" | "sisa" | "anggaran";

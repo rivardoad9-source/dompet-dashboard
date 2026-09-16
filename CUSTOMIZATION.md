@@ -15,16 +15,18 @@ Sisanya — komponen, halaman, grafik — membaca dari keempat file itu. Tidak a
 
 ## 1. Mengganti warna brand
 
-Buka `src/app/globals.css`. Di paling atas ada tiga blok token: `:root` (tema **Noir**, sekaligus fallback), `[data-theme="midnight"]` (tema **Midnight**), dan `[data-theme="glass"]` (tema **Glass**).
+Buka `src/app/globals.css`. Di paling atas ada tiga blok token: `:root` (tema **Mono**, sekaligus fallback), `[data-theme="midnight"]` (tema **Midnight**), dan `[data-theme="glass"]` (tema **Glass**).
+
+Khusus tema Mono, tokennya dua lapis: `:root` mengatur halaman (putih), dan blok `--panel-*` mengatur kartu, sheet, dan bottom nav (hitam). Aturan `.dp-card` di bagian Utilities meng-alias `--panel-*` menjadi `--surface`/`--ink` di dalam subtree panel, jadi satu kelas `text-ink` menghasilkan hitam di halaman dan putih di dalam kartu. Kalau kamu mengubah warna panel, ubah `--panel-*` — bukan aturan `.dp-card`-nya.
 
 Untuk rebrand cepat, ubah lima baris ini di `:root`:
 
 ```css
 :root {
   --brand:        #c8f24e;  /* warna utama: tombol, tab aktif, ring */
-  --brand-strong: #d8fb70;  /* varian hover — di tema gelap justru lebih terang */
-  --brand-soft:   #1e2708;  /* latar lembut: badge, chip, avatar */
-  --brand-tint:   #2d3b0d;  /* hover di atas brand-soft */
+  --brand-strong: #b6e63c;  /* varian hover */
+  --brand-soft:   #1b2209;  /* keping gelap: badge, chip, avatar */
+  --brand-tint:   #2a350d;  /* hover di atas brand-soft */
   --on-brand:     #101405;  /* teks/ikon DI ATAS --brand */
 }
 ```
@@ -34,8 +36,8 @@ Untuk rebrand cepat, ubah lima baris ini di `:root`:
 Kartu saldo besar di Beranda memakai gradasi terpisah:
 
 ```css
---hero-from:      #1f1f1f;  /* gradasi awal (kiri atas) */
---hero-to:        #070707;  /* gradasi akhir (kanan bawah) */
+--hero-from:      #1c1c1c;  /* gradasi awal (kiri atas) */
+--hero-to:        #050505;  /* gradasi akhir (kanan bawah) */
 --hero-ink:       #fafafa;  /* teks di atas gradasi */
 --hero-ink-muted: #a8a8a8;  /* label sekunder di atas gradasi */
 ```

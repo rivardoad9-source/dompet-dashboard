@@ -92,7 +92,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   <div
                     key={t.id}
                     role="status"
-                    className="dp-pop pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-float"
+                    className="dp-panel dp-pop pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-float"
                   >
                     <Icon className="size-5 shrink-0" style={{ color: `var(${TONE_VAR[t.tone]})` }} />
                     <p className="min-w-0 flex-1 text-sm font-medium text-ink">{t.message}</p>
