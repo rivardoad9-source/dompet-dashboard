@@ -16,7 +16,8 @@ Tiga tema bawaan: **Mono** (halaman putih, kartu hitam, aksen lime — tema bawa
 ## Fitur
 
 **Beranda**
-- Header saldo likuid, pemasukan, dan pengeluaran bulan berjalan
+- Header saldo likuid, pemasukan, dan pengeluaran bulan berjalan — di layar kecil kartunya menempel di bawah topbar dan menembus tepi layar
+- **Saring per kategori langsung dari kartu saldo** — deret kategori di bawah angka besar berisi kategori yang benar-benar terpakai bulan itu, urut dari yang terbesar. Ketuk salah satunya dan angka utamanya berganti jadi pengeluaran kategori itu, lengkap dengan jumlah transaksi dan porsinya terhadap total. Saringannya sengaja tidak disimpan: sekali lihat, lalu ditinggalkan
 - **Angka utama bisa diganti** — ketuk labelnya untuk memilih Saldo likuid, Keluar, Masuk, Sisa (masuk−keluar), atau Sisa anggaran. Dua angka pendamping ikut menyesuaikan supaya tidak ada nominal yang tampil dua kali dalam satu kartu; pilihannya tersimpan
 - **Ring Anggaran vs Realisasi** — donut SVG interaktif; tiap segmen adalah satu kategori, arahkan kursor (atau fokus keyboard) untuk melihat rinciannya di tengah ring
 - Indikator warna dinamis: hijau `<70%`, kuning `70–90%`, merah `>90%`
