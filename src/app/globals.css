@@ -47,15 +47,20 @@
   --line: #dcdcda;
   --line-strong: #8c8c90;
 
-  /* Brand — lime.
+  /* Brand — lime, saturasi 61% bukan 86%.
+     Setelah kontras halaman terhadap panel diturunkan, lime yang penuh jadi
+     satu-satunya hal yang masih berteriak di layar — justru lebih menonjol
+     daripada sebelumnya, karena sekitarnya sudah tenang. Hue-nya dipertahankan,
+     hanya saturasinya yang dilepas.
+
      `--brand-soft` dan `--brand-tint` sengaja gelap, bukan lime pucat. Pasangan
      `bg-brand-soft text-brand` dipakai di atas halaman putih sekaligus di dalam
      kartu hitam; lime di atas lime pucat tidak terbaca di keduanya, lime di atas
      keping gelap terbaca di keduanya. */
-  --brand: #c8f24e;
-  --brand-strong: #b6e63c;
-  --brand-soft: #262f0f;
-  --brand-tint: #364214;
+  --brand: #c2dc70;
+  --brand-strong: #b3cf5c;
+  --brand-soft: #282e16;
+  --brand-tint: #383f1f;
   --on-brand: #101405;
 
   /* Secondary accent (charts, gradients) */
@@ -85,7 +90,7 @@
   --sheet-scrim: rgba(24, 24, 27, 0.46);
 
   /* Categorical chart palette — grafiknya selalu di dalam panel gelap */
-  --cat-1: #c8f24e;
+  --cat-1: #c2dc70;
   --cat-2: #7dd3fc;
   --cat-3: #f0abfc;
   --cat-4: #fbbf24;
@@ -485,7 +490,7 @@ html:not([data-theme="midnight"]):not([data-theme="glass"])
   --line-strong: var(--panel-line-strong);
 
   /* Cincin fokus ikut berbalik: hitam tidak terlihat di atas panel hitam. */
-  --ring: #c8f24e;
+  --ring: #c2dc70;
 
   /* Kontrol bawaan browser di dalam panel ikut gelap — inilah yang membuat
      ikon pemilih tanggal terbaca di atas field hitam. */
@@ -501,7 +506,7 @@ html:not([data-theme="midnight"]):not([data-theme="glass"])
    -------------------------------------------------------------------------- */
 html:not([data-theme="midnight"]):not([data-theme="glass"]) .dp-hero {
   background-image:
-    radial-gradient(26rem 18rem at 108% -25%, rgba(200, 242, 78, 0.17), transparent 62%),
+    radial-gradient(26rem 18rem at 108% -25%, rgba(194, 220, 112, 0.15), transparent 62%),
     linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
 }
 

@@ -85,7 +85,7 @@ export async function buildRecapImage(input: RecapInput): Promise<Blob> {
   const inkMuted = panelVar("ink-muted", "#a6a6aa");
   const inkFaint = panelVar("ink-faint", "#909095");
   const line = panelVar("line", "#3a3a3e");
-  const brand = cssVar("--brand", "#c8f24e");
+  const brand = cssVar("--brand", "#c2dc70");
   const heroFrom = cssVar("--hero-from", "#2a2a2e");
   const heroTo = cssVar("--hero-to", "#17171a");
   const heroInk = cssVar("--hero-ink", "#f4f4f3");
