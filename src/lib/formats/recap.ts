@@ -79,16 +79,16 @@ export async function buildRecapImage(input: RecapInput): Promise<Blob> {
   if (!ctx) throw new Error("Canvas tidak didukung di browser ini.");
 
   const font = fontStack();
-  const bg = panelVar("bg", "#0b0b0b");
-  const surface = panelVar("surface", "#141414");
-  const ink = panelVar("ink", "#fafafa");
-  const inkMuted = panelVar("ink-muted", "#a3a3a3");
-  const inkFaint = panelVar("ink-faint", "#8f8f8f");
-  const line = panelVar("line", "#303030");
+  const bg = panelVar("bg", "#1a1a1c");
+  const surface = panelVar("surface", "#212124");
+  const ink = panelVar("ink", "#f0f0ef");
+  const inkMuted = panelVar("ink-muted", "#a6a6aa");
+  const inkFaint = panelVar("ink-faint", "#909095");
+  const line = panelVar("line", "#3a3a3e");
   const brand = cssVar("--brand", "#c8f24e");
-  const heroFrom = cssVar("--hero-from", "#1c1c1c");
-  const heroTo = cssVar("--hero-to", "#050505");
-  const heroInk = cssVar("--hero-ink", "#fafafa");
+  const heroFrom = cssVar("--hero-from", "#2a2a2e");
+  const heroTo = cssVar("--hero-to", "#17171a");
+  const heroInk = cssVar("--hero-ink", "#f4f4f3");
   const success = cssVar("--success", "#4ade80");
   const statusColor = cssVar(STATUS_META[input.summary.status].colorVar, brand);
 
@@ -149,7 +149,7 @@ export async function buildRecapImage(input: RecapInput): Promise<Blob> {
 
   ctx.lineCap = "butt";
   ctx.lineWidth = thickness;
-  ctx.strokeStyle = panelVar("surface-3", "#2b2b2b");
+  ctx.strokeStyle = panelVar("surface-3", "#37373b");
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.stroke();

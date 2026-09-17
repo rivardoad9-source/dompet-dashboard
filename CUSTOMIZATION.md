@@ -25,8 +25,8 @@ Untuk rebrand cepat, ubah lima baris ini di `:root`:
 :root {
   --brand:        #c8f24e;  /* warna utama: tombol, tab aktif, ring */
   --brand-strong: #b6e63c;  /* varian hover */
-  --brand-soft:   #1b2209;  /* keping gelap: badge, chip, avatar */
-  --brand-tint:   #2a350d;  /* hover di atas brand-soft */
+  --brand-soft:   #262f0f;  /* keping gelap: badge, chip, avatar */
+  --brand-tint:   #364214;  /* hover di atas brand-soft */
   --on-brand:     #101405;  /* teks/ikon DI ATAS --brand */
 }
 ```
@@ -36,10 +36,10 @@ Untuk rebrand cepat, ubah lima baris ini di `:root`:
 Kartu saldo besar di Beranda memakai gradasi terpisah:
 
 ```css
---hero-from:      #1c1c1c;  /* gradasi awal (kiri atas) */
---hero-to:        #050505;  /* gradasi akhir (kanan bawah) */
---hero-ink:       #fafafa;  /* teks di atas gradasi */
---hero-ink-muted: #a8a8a8;  /* label sekunder di atas gradasi */
+--hero-from:      #2a2a2e;  /* gradasi awal (kiri atas) */
+--hero-to:        #17171a;  /* gradasi akhir (kanan bawah) */
+--hero-ink:       #f4f4f3;  /* teks di atas gradasi */
+--hero-ink-muted: #a6a6aa;  /* label sekunder di atas gradasi */
 ```
 
 Setelah warna brand berubah, regenerasi ikon PWA supaya ikut cocok:
