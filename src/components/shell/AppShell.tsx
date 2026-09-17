@@ -74,7 +74,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Page heading used inside the mobile viewport (desktop shows it in the topbar). */
+/**
+ * Kepala halaman untuk layar kecil — di desktop judulnya sudah ada di topbar,
+ * jadi blok ini `lg:hidden`.
+ *
+ * Bentuknya menyamai kartu saldo di Beranda: menembus padding halaman, menempel
+ * di bawah topbar, sudut atas siku dan sudut bawah membulat. Beranda membuka
+ * dengan bidang hitam; tanpa ini keempat halaman lain membuka dengan teks di
+ * atas putih, dan berpindah tab terasa seperti berpindah aplikasi.
+ *
+ * Karena `lg:hidden`, tidak ada satu pun kelas di sini yang perlu dibatalkan di
+ * layar lebar — margin negatifnya hanya pernah bertemu `px-4 pt-4` milik `main`
+ * versi mobile.
+ *
+ * `dp-panel` yang membuatnya gelap: di tema Mono kelas itu membalik token
+ * permukaan dan tinta untuk seluruh subtree, jadi `text-ink` di dalamnya jadi
+ * putih tanpa disebut. Di Midnight dan Glass kelas itu tidak berefek dan
+ * `bg-surface` sudah gelap dengan sendirinya.
+ */
 export function PageIntro({
   title,
   description,
@@ -85,7 +102,7 @@ export function PageIntro({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3 lg:hidden">
+    <div className="dp-panel -mx-4 -mt-4 mb-4 flex items-end justify-between gap-3 rounded-b-[28px] bg-surface px-5 pb-5 pt-5 lg:hidden">
       <div className="min-w-0">
         <h1 className="text-xl font-extrabold tracking-tight text-ink">{title}</h1>
         <p className="mt-0.5 text-xs text-ink-muted">{description}</p>
