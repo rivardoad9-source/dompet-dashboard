@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   // bawaan sekarang gelap, dan `applyTheme()` menimpa isi meta ini begitu tema
   // tersimpan dibaca. Dua tag `theme-color` justru membuat penimpaan itu meleset
   // ke tag yang salah, karena `querySelector` hanya mengambil yang pertama.
-  themeColor: "#ffffff",
+  themeColor: "#f5f5f4",
 };
 
 /**

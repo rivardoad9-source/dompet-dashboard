@@ -252,7 +252,7 @@ export function hydrateStore() {
 }
 
 const THEME_COLORS: Record<string, string> = {
-  mono: "#ffffff",
+  mono: "#f5f5f4",
   midnight: "#0d1230",
   glass: "#0b1024",
 };
