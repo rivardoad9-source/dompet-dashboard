@@ -23,10 +23,10 @@ Untuk rebrand cepat, ubah lima baris ini di `:root`:
 
 ```css
 :root {
-  --brand:        #c8f24e;  /* warna utama: tombol, tab aktif, ring */
-  --brand-strong: #b6e63c;  /* varian hover */
-  --brand-soft:   #262f0f;  /* keping gelap: badge, chip, avatar */
-  --brand-tint:   #364214;  /* hover di atas brand-soft */
+  --brand:        #c2dc70;  /* warna utama: tombol, tab aktif, ring */
+  --brand-strong: #b3cf5c;  /* varian hover */
+  --brand-soft:   #282e16;  /* keping gelap: badge, chip, avatar */
+  --brand-tint:   #383f1f;  /* hover di atas brand-soft */
   --on-brand:     #101405;  /* teks/ikon DI ATAS --brand */
 }
 ```

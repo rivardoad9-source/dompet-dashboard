@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // ---- Brand ---------------------------------------------------------------
-const BRAND = [0xc8, 0xf2, 0x4e]; // --brand (lime)
+const BRAND = [0xc2, 0xdc, 0x70]; // --brand (lime)
 const INK = [0x10, 0x14, 0x05]; // --on-brand
 // --------------------------------------------------------------------------
 
